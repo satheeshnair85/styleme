@@ -1,5 +1,6 @@
 # To Access
 URL -> https://stylemytravel-dev.myshopify.com/
+
 Password -> ai_for_bharat
 
 # AI Custom Merchandise - Shopify Theme
