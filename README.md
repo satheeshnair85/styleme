@@ -1,3 +1,7 @@
+# To Access
+URL -> https://stylemytravel-dev.myshopify.com/
+Password -> ai_for_bharat
+
 # AI Custom Merchandise - Shopify Theme
 
 A mobile-first Progressive Web App (PWA) theme for AI-powered custom merchandise on Shopify.
