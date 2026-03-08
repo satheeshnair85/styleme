@@ -1,0 +1,678 @@
+{% comment %}
+  Product page with AI-generated design composite
+{% endcomment %}
+
+<div class="product-page">
+  <div class="product-container">
+    
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+      <a href="/">Home</a> / 
+      <a href="/collections/{{ product.collections.first.handle }}">{{ product.collections.first.title }}</a> / 
+      <span>{{ product.title }}</span>
+    </div>
+
+    <div class="product-layout">
+      
+      <!-- Product Images -->
+      <div class="product-images">
+        <div class="main-image">
+          <img id="main-product-image" 
+               src="{{ product.featured_image | img_url: '800x' }}" 
+               alt="{{ product.title }}"
+               class="product-main-img">
+        </div>
+        
+        <!-- Thumbnail Gallery -->
+        {% if product.images.size > 1 %}
+          <div class="image-thumbnails">
+            {% for image in product.images limit: 5 %}
+              <img src="{{ image | img_url: '100x' }}" 
+                   alt="{{ product.title }}"
+                   class="thumbnail {% if forloop.first %}active{% endif %}"
+                   onclick="changeMainImage('{{ image | img_url: '800x' }}', this)">
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Product Info -->
+      <div class="product-info-section">
+        <h1 class="product-title">{{ product.title }}</h1>
+        
+        <div class="product-vendor">{{ product.vendor }}</div>
+        
+        <!-- Rating -->
+        <div class="product-rating">
+          <div class="stars">
+            {% for i in (1..5) %}
+              <span class="star filled">★</span>
+            {% endfor %}
+          </div>
+          <span class="rating-text">4.5 ({{ product.id | modulo: 500 | plus: 100 }} reviews)</span>
+        </div>
+
+        <!-- Price -->
+        <div class="product-price">
+          <span class="current-price">{{ product.price | money }}</span>
+          {% if product.compare_at_price > product.price %}
+            <span class="original-price">{{ product.compare_at_price | money }}</span>
+            <span class="discount-badge">
+              {{ product.compare_at_price | minus: product.price | times: 100 | divided_by: product.compare_at_price }}% OFF
+            </span>
+          {% endif %}
+        </div>
+
+        <!-- AI Design Banner -->
+        <div id="ai-design-banner" class="ai-design-banner" style="display: none;">
+          <div class="banner-content">
+            <div class="banner-icon">✨</div>
+            <div class="banner-text">
+              <strong>Your AI Design Applied!</strong>
+              <p>This product shows your custom AI-generated design</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Product Form -->
+        {% form 'product', product, id: 'product-form' %}
+          
+          <!-- Variants -->
+          {% unless product.has_only_default_variant %}
+            {% for option in product.options_with_values %}
+              <div class="product-option">
+                <label class="option-label">{{ option.name }}</label>
+                <div class="option-values">
+                  {% for value in option.values %}
+                    <label class="option-value">
+                      <input type="radio" 
+                             name="option{{ option.position }}" 
+                             value="{{ value | escape }}"
+                             {% if forloop.first %}checked{% endif %}>
+                      <span>{{ value }}</span>
+                    </label>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endfor %}
+          {% endunless %}
+
+          <!-- Quantity -->
+          <div class="product-quantity">
+            <label class="quantity-label">Quantity</label>
+            <div class="quantity-selector">
+              <button type="button" class="qty-btn" onclick="decrementQuantity()">−</button>
+              <input type="number" 
+                     name="quantity" 
+                     id="quantity" 
+                     value="1" 
+                     min="1" 
+                     class="quantity-input">
+              <button type="button" class="qty-btn" onclick="incrementQuantity()">+</button>
+            </div>
+          </div>
+
+          <!-- Hidden fields for design data -->
+          <input type="hidden" name="properties[Design URL]" id="design-url-input" value="">
+          <input type="hidden" name="properties[Design Prompt]" id="design-prompt-input" value="">
+          <input type="hidden" name="properties[Composite URL]" id="composite-url-input" value="">
+
+          <!-- Add to Cart Button -->
+          <button type="submit" 
+                  name="add" 
+                  class="add-to-cart-btn"
+                  {% unless product.available %}disabled{% endunless %}>
+            {% if product.available %}
+              Add to Cart
+            {% else %}
+              Sold Out
+            {% endif %}
+          </button>
+
+        {% endform %}
+
+        <!-- Product Description -->
+        {% if product.description != blank %}
+          <div class="product-description">
+            <h3>Description</h3>
+            {{ product.description }}
+          </div>
+        {% endif %}
+
+        <!-- Features -->
+        <div class="product-features">
+          <h3>Features</h3>
+          <ul>
+            <li>✓ Premium quality fabric</li>
+            <li>✓ Custom AI-generated design</li>
+            <li>✓ Comfortable fit</li>
+            <li>✓ Durable print</li>
+            <li>✓ Machine washable</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  initializeProductPage();
+});
+
+function initializeProductPage() {
+  // Check for design parameters in URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const designUrl = urlParams.get('design_url');
+  const designPrompt = urlParams.get('design_prompt');
+  
+  if (designUrl) {
+    // Show AI design banner
+    const banner = document.getElementById('ai-design-banner');
+    if (banner) {
+      banner.style.display = 'block';
+    }
+    
+    // Store design data in hidden fields
+    document.getElementById('design-url-input').value = designUrl;
+    document.getElementById('design-prompt-input').value = designPrompt || '';
+    
+    // Call compositor API to create product mockup
+    createProductComposite(designUrl);
+  }
+}
+
+async function createProductComposite(designUrl) {
+  const mainImage = document.getElementById('main-product-image');
+  if (!mainImage) return;
+  
+  // Get product type from page URL
+  const productHandle = window.location.pathname.split('/').pop().split('?')[0];
+  const productType = getProductType(productHandle);
+  
+  try {
+    // Show loading state
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.className = 'loading-overlay';
+    loadingOverlay.innerHTML = '<div class="loading-spinner">Creating your custom design...</div>';
+    mainImage.parentElement.appendChild(loadingOverlay);
+    
+    // Call compositor API
+    const response = await fetch('https://letb0j7l89.execute-api.us-east-1.amazonaws.com/dev/composite-design', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        designUrl: designUrl,
+        productType: productType
+      })
+    });
+    
+    const result = await response.json();
+    
+    // Remove loading overlay
+    if (loadingOverlay.parentElement) {
+      loadingOverlay.parentElement.removeChild(loadingOverlay);
+    }
+    
+    if (result.success && result.data.compositeUrl) {
+      // Show composite image
+      mainImage.src = result.data.compositeUrl;
+      document.getElementById('composite-url-input').value = result.data.compositeUrl;
+    } else {
+      // Fallback: show original design
+      mainImage.src = designUrl;
+      document.getElementById('composite-url-input').value = designUrl;
+    }
+  } catch (error) {
+    console.error('Compositor error:', error);
+    
+    // Remove loading overlay
+    const loadingOverlay = document.querySelector('.loading-overlay');
+    if (loadingOverlay && loadingOverlay.parentElement) {
+      loadingOverlay.parentElement.removeChild(loadingOverlay);
+    }
+    
+    // Fallback: show original design
+    mainImage.src = designUrl;
+    document.getElementById('composite-url-input').value = designUrl;
+  }
+}
+
+function getProductType(productHandle) {
+  const handle = productHandle.toLowerCase();
+  
+  if (handle.includes('hoodie') || handle.includes('sweatshirt')) {
+    return 'hoodie';
+  } else if (handle.includes('tshirt') || handle.includes('t-shirt') || handle.includes('shirt')) {
+    return 'tshirt';
+  }
+  
+  return 'tshirt';
+}
+
+function changeMainImage(imageUrl, thumbnail) {
+  const mainImage = document.getElementById('main-product-image');
+  if (mainImage) {
+    mainImage.src = imageUrl;
+  }
+  
+  // Update active thumbnail
+  document.querySelectorAll('.thumbnail').forEach(thumb => {
+    thumb.classList.remove('active');
+  });
+  thumbnail.classList.add('active');
+}
+
+function incrementQuantity() {
+  const input = document.getElementById('quantity');
+  input.value = parseInt(input.value) + 1;
+}
+
+function decrementQuantity() {
+  const input = document.getElementById('quantity');
+  if (parseInt(input.value) > 1) {
+    input.value = parseInt(input.value) - 1;
+  }
+}
+
+// Handle form submission
+document.getElementById('product-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const formData = new FormData(this);
+  
+  fetch('/cart/add.js', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    // Show success message
+    alert('Product added to cart!');
+    
+    // Optionally redirect to cart
+    window.location.href = '/cart';
+  })
+  .catch(error => {
+    console.error('Error adding to cart:', error);
+    alert('Failed to add product to cart. Please try again.');
+  });
+});
+</script>
+
+<style>
+  .product-page {
+    padding: 2rem 0;
+    background: #f8fafc;
+    min-height: 100vh;
+  }
+
+  .product-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+
+  .breadcrumb {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 2rem;
+  }
+
+  .breadcrumb a {
+    color: #6366f1;
+    text-decoration: none;
+  }
+
+  .product-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  /* Product Images */
+  .product-images {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .main-image {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f3f4f6;
+    position: relative;
+  }
+
+  .product-main-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* Loading Overlay */
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  .loading-spinner {
+    text-align: center;
+    color: #6366f1;
+    font-weight: 500;
+  }
+
+  .loading-spinner::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 40px;
+    margin: 1rem auto 0;
+    border: 3px solid rgba(99, 102, 241, 0.3);
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .image-thumbnails {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+  }
+
+  .thumbnail {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .thumbnail:hover,
+  .thumbnail.active {
+    border-color: #6366f1;
+  }
+
+  /* Product Info */
+  .product-info-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .product-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+  }
+
+  .product-vendor {
+    font-size: 0.875rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .product-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .stars {
+    display: flex;
+    gap: 2px;
+  }
+
+  .star {
+    color: #d1d5db;
+    font-size: 1.25rem;
+  }
+
+  .star.filled {
+    color: #fbbf24;
+  }
+
+  .rating-text {
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+
+  .product-price {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .current-price {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+  }
+
+  .original-price {
+    font-size: 1.25rem;
+    color: #9ca3af;
+    text-decoration: line-through;
+  }
+
+  .discount-badge {
+    background: #10b981;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  /* AI Design Banner */
+  .ai-design-banner {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  .banner-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .banner-icon {
+    font-size: 2rem;
+  }
+
+  .banner-text strong {
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+
+  .banner-text p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.875rem;
+  }
+
+  /* Product Options */
+  .product-option {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .option-label {
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .option-values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .option-value {
+    position: relative;
+    cursor: pointer;
+  }
+
+  .option-value input {
+    position: absolute;
+    opacity: 0;
+  }
+
+  .option-value span {
+    display: block;
+    padding: 0.5rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .option-value input:checked + span {
+    border-color: #6366f1;
+    background: #eef2ff;
+    color: #6366f1;
+    font-weight: 600;
+  }
+
+  /* Quantity */
+  .product-quantity {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .quantity-label {
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .quantity-selector {
+    display: flex;
+    align-items: center;
+    width: fit-content;
+    border: 2px solid #e5e7eb;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .qty-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: #f9fafb;
+    cursor: pointer;
+    font-size: 1.25rem;
+    transition: background 0.2s;
+  }
+
+  .qty-btn:hover {
+    background: #e5e7eb;
+  }
+
+  .quantity-input {
+    width: 60px;
+    height: 40px;
+    border: none;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  /* Add to Cart Button */
+  .add-to-cart-btn {
+    width: 100%;
+    padding: 1rem;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .add-to-cart-btn:hover:not(:disabled) {
+    background: #4f46e5;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  }
+
+  .add-to-cart-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+  }
+
+  /* Product Description */
+  .product-description,
+  .product-features {
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .product-description h3,
+  .product-features h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.75rem;
+  }
+
+  .product-features ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .product-features li {
+    padding: 0.5rem 0;
+    color: #4b5563;
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .product-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .product-title {
+      font-size: 1.5rem;
+    }
+
+    .current-price {
+      font-size: 1.5rem;
+    }
+
+    .product-layout {
+      padding: 1rem;
+    }
+  }
+</style>

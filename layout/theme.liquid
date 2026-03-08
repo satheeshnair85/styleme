@@ -30,7 +30,8 @@
 
     <script src="{{ 'global.js' | asset_url }}" defer="defer"></script>
     <script src="{{ 'offline-storage.js' | asset_url }}" defer="defer"></script>
-    <script src="{{ 'customization.js' | asset_url }}" defer="defer"></script>
+    {%- comment -%}Disabled old customization workflow - now using direct product page navigation{%- endcomment -%}
+    {%- comment -%}<script src="{{ 'customization.js' | asset_url }}" defer="defer"></script>{%- endcomment -%}
     {{ content_for_header }}
 
     <style>

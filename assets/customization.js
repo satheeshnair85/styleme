@@ -15,28 +15,12 @@ class CustomizationWorkflow {
   }
 
   bindEvents() {
-    // Product card click handlers
+    // DISABLED: Old customization workflow
+    // The new workflow uses direct product page navigation with design parameters
+    // Product cards now have onclick handlers defined in collection.liquid
+    
+    // Only handle Start Customizing CTA button on homepage
     document.addEventListener('click', (e) => {
-      const productCard = e.target.closest('.product-card');
-      if (productCard) {
-        e.preventDefault();
-        const productType = productCard.dataset.productType;
-        const productHandle = productCard.dataset.productHandle || productType;
-        this.selectProduct(productHandle, productType);
-      }
-
-      // Customize button handlers
-      const customizeBtn = e.target.closest('.customize-btn');
-      if (customizeBtn) {
-        e.preventDefault();
-        const productCard = customizeBtn.closest('.product-card');
-        if (productCard) {
-          const productType = productCard.dataset.productType;
-          const productHandle = productCard.dataset.productHandle || productType;
-          this.selectProduct(productHandle, productType);
-        }
-      }
-
       // Start Customizing CTA button
       if (e.target.matches('.hero-cta .btn, .hero-cta .btn *')) {
         e.preventDefault();
