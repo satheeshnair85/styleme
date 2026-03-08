@@ -1,0 +1,818 @@
+{% comment %}
+  Collection Cards Section - Chat Interface Design (Ultra-minimal "Turing" experience)
+  Can display collections automatically or use manual blocks
+{% endcomment %}
+
+<section class="collection-cards-section">
+  <div class="collection-cards-container">
+    
+    {% if section.settings.display_mode == 'automatic' %}
+      {% comment %} Automatic mode - show all collections {% endcomment %}
+      {% for collection in collections %}
+        {% unless collection.handle == 'all' or collection.products.size == 0 %}
+          <!-- Gradient Wrapper for Border Effect -->
+          <div class="gradient-wrapper" data-collection="{{ collection.handle }}">
+            <div class="collection-card">
+              
+              <!-- Product Image Area (No text labels - "Turing" feel) -->
+              <div class="product-image-area">
+                {% comment %} First try to show product images {% endcomment %}
+                {% assign has_product_images = false %}
+                {% for product in collection.products limit: 1 %}
+                  {% if product.featured_image %}
+                    <img src="{{ product.featured_image | img_url: '400x300' }}" 
+                         alt="{{ product.title }}" 
+                         class="product-hero-image">
+                    {% assign has_product_images = true %}
+                    {% break %}
+                  {% elsif product.images.size > 0 %}
+                    <img src="{{ product.images.first | img_url: '400x300' }}" 
+                         alt="{{ product.title }}" 
+                         class="product-hero-image">
+                    {% assign has_product_images = true %}
+                    {% break %}
+                  {% endif %}
+                {% endfor %}
+                
+                {% comment %} If no product images, show collection image {% endcomment %}
+                {% unless has_product_images %}
+                  {% if collection.featured_image %}
+                    <img src="{{ collection.featured_image | img_url: '400x300' }}" 
+                         alt="{{ collection.title }}" 
+                         class="product-hero-image">
+                  {% else %}
+                    <!-- Placeholder for product type -->
+                    <div class="product-placeholder">
+                      <div class="placeholder-text">{{ collection.title | upcase }}</div>
+                    </div>
+                  {% endif %}
+                {% endunless %}
+              </div>
+
+              <!-- Chat Interface Input - Redesigned with proper alignment -->
+              <div class="input-section">
+                <input 
+                  type="text"
+                  class="prompt-input" 
+                  placeholder="Ask anything"
+                  maxlength="500"
+                  onfocus="activateCard(this)"
+                  onblur="deactivateCard(this)">
+                <div class="input-actions">
+                  <button class="action-btn image-btn" onclick="showImageOptions(this)" title="Add image from gallery or camera">
+                    🖼️
+                  </button>
+                  <button class="action-btn send-btn" onclick="generateDesign(this)" title="Send message to generate design">
+                    ➤
+                  </button>
+                </div>
+                <input type="file" class="file-input" accept="image/*" onchange="handleImageUpload(this)">
+                <input type="file" class="camera-input" accept="image/*" capture="camera" onchange="handleImageUpload(this)">
+              </div>
+            </div>
+          </div>
+        {% endunless %}
+      {% endfor %}
+      
+    {% else %}
+      {% comment %} Manual mode - use blocks {% endcomment %}
+      {% for block in section.blocks %}
+        <!-- Gradient Wrapper for Border Effect -->
+        <div class="gradient-wrapper" data-collection="{{ block.settings.collection | default: 'all' }}">
+          <div class="collection-card" {{ block.shopify_attributes }}>
+          
+          <!-- Product Image Area (No text labels - "Turing" feel) -->
+          <div class="product-image-area">
+            {% if block.settings.collection != blank %}
+              {% assign collection = collections[block.settings.collection] %}
+              {% if collection %}
+                {% comment %} First try to show product images {% endcomment %}
+                {% assign has_product_images = false %}
+                {% for product in collection.products limit: 1 %}
+                  {% if product.featured_image %}
+                    <img src="{{ product.featured_image | img_url: '400x300' }}" 
+                         alt="{{ product.title }}" 
+                         class="product-hero-image">
+                    {% assign has_product_images = true %}
+                    {% break %}
+                  {% elsif product.images.size > 0 %}
+                    <img src="{{ product.images.first | img_url: '400x300' }}" 
+                         alt="{{ product.title }}" 
+                         class="product-hero-image">
+                    {% assign has_product_images = true %}
+                    {% break %}
+                  {% endif %}
+                {% endfor %}
+                
+                {% comment %} If no product images, show collection image {% endcomment %}
+                {% unless has_product_images %}
+                  {% if collection.featured_image %}
+                    <img src="{{ collection.featured_image | img_url: '400x300' }}" 
+                         alt="{{ collection.title }}" 
+                         class="product-hero-image">
+                  {% else %}
+                    <!-- Placeholder for product type -->
+                    <div class="product-placeholder">
+                      <div class="placeholder-text">{{ block.settings.collection_title | default: collection.title | upcase }}</div>
+                    </div>
+                  {% endif %}
+                {% endunless %}
+              {% endif %}
+            {% endif %}
+          </div>
+
+          <!-- Chat Interface Input - Redesigned with proper alignment -->
+          <div class="input-section">
+            <input 
+              type="text"
+              class="prompt-input" 
+              placeholder="Ask anything"
+              maxlength="500"
+              onfocus="activateCard(this)"
+              onblur="deactivateCard(this)">
+            <div class="input-actions">
+              <button class="action-btn image-btn" onclick="showImageOptions(this)" title="Add image from gallery or camera">
+                🖼️
+              </button>
+              <button class="action-btn send-btn" onclick="generateDesign(this)" title="Send message to generate design">
+                ➤
+              </button>
+            </div>
+            <input type="file" class="file-input" accept="image/*" onchange="handleImageUpload(this)">
+            <input type="file" class="camera-input" accept="image/*" capture="camera" onchange="handleImageUpload(this)">
+          </div>
+          </div>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+  </div>
+
+  <!-- Image Source Selection Modal -->
+  <div class="image-modal" id="imageModal">
+    <div class="modal-content">
+      <h3 class="modal-title">Choose Image Source</h3>
+      <div class="image-options">
+        <div class="image-option" onclick="selectGallery()">
+          <div class="option-icon">📱</div>
+          <div class="option-text">
+            <div class="option-title">Gallery</div>
+            <div class="option-desc">Choose from your photos</div>
+          </div>
+        </div>
+        <div class="image-option" onclick="selectCamera()">
+          <div class="option-icon">📷</div>
+          <div class="option-text">
+            <div class="option-title">Camera</div>
+            <div class="option-desc">Take a new photo</div>
+          </div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeImageModal()">Cancel</button>
+    </div>
+  </div>
+</section>
+
+<script>
+  let currentCard = null; // Track which card is being used for modal
+
+  // Card activation functions for selection state
+  function activateCard(input) {
+    const wrapper = input.closest('.gradient-wrapper');
+    if (wrapper) {
+      wrapper.classList.add('active');
+    }
+  }
+
+  function deactivateCard(input) {
+    const wrapper = input.closest('.gradient-wrapper');
+    if (wrapper) {
+      wrapper.classList.remove('active');
+    }
+  }
+
+  function getProductTypeFromCollection(collectionHandle) {
+    // Map collection handles to product types
+    const collectionMap = {
+      'tshirts': 'tshirt',
+      'hoodies': 'hoodie',
+      'accessories': 'sticker',
+      'mugs': 'mug',
+      'caps': 'cap',
+      'all': 'tshirt'
+    };
+    
+    return collectionMap[collectionHandle] || 'tshirt';
+  }
+
+  // Character counter functionality (simplified for input)
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.prompt-input').forEach(input => {
+      input.addEventListener('input', function() {
+        // Enable/disable send button based on content
+        const sendBtn = this.parentElement.querySelector('.send-btn');
+        sendBtn.disabled = this.value.trim().length === 0;
+      });
+    });
+
+    // Initialize send buttons as disabled
+    document.querySelectorAll('.send-btn').forEach(btn => {
+      btn.disabled = true;
+    });
+  });
+
+  // Show image source options modal
+  function showImageOptions(button) {
+    currentCard = button.closest('.collection-card');
+    const modal = document.getElementById('imageModal');
+    modal.classList.add('show');
+  }
+
+  // Close image modal
+  function closeImageModal() {
+    const modal = document.getElementById('imageModal');
+    modal.classList.remove('show');
+    currentCard = null;
+  }
+
+  // Select gallery option
+  function selectGallery() {
+    if (currentCard) {
+      const fileInput = currentCard.querySelector('.file-input');
+      fileInput.click();
+    }
+    closeImageModal();
+  }
+
+  // Select camera option
+  function selectCamera() {
+    if (currentCard) {
+      const cameraInput = currentCard.querySelector('.camera-input');
+      cameraInput.click();
+    }
+    closeImageModal();
+  }
+
+  // Handle image upload (works for both gallery and camera)
+  function handleImageUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const card = input.closest('.collection-card');
+    const promptInput = card.querySelector('.prompt-input');
+    const sendBtn = card.querySelector('.send-btn');
+    
+    // Show file name in input
+    const source = input.hasAttribute('capture') ? 'Camera' : 'Gallery';
+    promptInput.value = `${source} image: ${file.name}`;
+    promptInput.style.background = '#f0fdf4';
+    promptInput.style.borderColor = '#10b981';
+    
+    // Enable send button
+    sendBtn.disabled = false;
+  }
+
+  // Generate design (send message)
+  function generateDesign(button) {
+    const card = button.closest('.collection-card');
+    const input = card.querySelector('.prompt-input');
+    const prompt = input.value.trim();
+    const collectionHandle = card.getAttribute('data-collection') || 'all';
+    
+    if (!prompt) {
+      alert('Please enter a message or upload an image');
+      return;
+    }
+    
+    if (prompt.length < 3) {
+      alert('Please enter at least 3 characters');
+      return;
+    }
+    
+    // Use the AI configuration from theme settings
+    const config = window.aiConfig;
+    if (!config || !config.apiEndpoint || !config.apiKey) {
+      console.error('AI configuration not found. Please check theme settings.');
+      alert('AI service not configured. Please contact support.');
+      return;
+    }
+    
+    console.log('Generating design from prompt:', prompt);
+    console.log('For collection:', collectionHandle);
+    
+    // Show loading state
+    button.innerHTML = '⏳';
+    button.disabled = true;
+    input.disabled = true;
+    
+    // Call the actual API
+    const payload = {
+      prompt: prompt,
+      productType: getProductTypeFromCollection(collectionHandle),
+      userId: null,
+      style: 'standard'
+    };
+    
+    if (config.debugMode) {
+      console.log('[AI Debug] Homepage API call:', payload);
+    }
+    
+    fetch(config.apiEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Api-Key': config.apiKey
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (config.debugMode) {
+        console.log('[AI Debug] Homepage API response:', data);
+      }
+      
+      if (data.success && data.data && data.data.designUrl) {
+        // Success - redirect to collection page with the generated design
+        const params = new URLSearchParams({
+          design_url: data.data.designUrl,
+          design_id: data.data.designId,
+          design_prompt: prompt,
+          product_type: payload.productType
+        });
+        
+        // Redirect to the specific collection with the generated design
+        window.location.href = `/collections/${collectionHandle}?${params.toString()}`;
+      } else {
+        throw new Error(data.error || 'Generation failed');
+      }
+    })
+    .catch(error => {
+      console.error('Design generation error:', error);
+      alert('Failed to generate design. Please try again.');
+    })
+    .finally(() => {
+      button.innerHTML = '➤';
+      button.disabled = false;
+      input.disabled = false;
+    });
+  }
+
+  // Close modal when clicking outside
+  document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('imageModal');
+    if (modal) {
+      modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeImageModal();
+        }
+      });
+    }
+  });
+</script>
+
+<style>
+  .collection-cards-section {
+    padding: 2rem 1rem;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  /* Compact horizontal grid layout */
+  .collection-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+
+  /* Gradient wrapper for orange border effect */
+  .gradient-wrapper {
+    background: linear-gradient(135deg, #ff6b35, #f7931e, #ffb347, #ffd700);
+    border-radius: 12px;
+    padding: 2px;
+    height: 180px; /* Increased height to accommodate input */
+    width: 100%;
+    max-width: 280px;
+    min-width: 260px;
+    justify-self: center;
+    transition: all 0.3s ease;
+  }
+
+  .gradient-wrapper:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255, 107, 53, 0.15);
+  }
+
+  /* Selection state - orange gradient all around */
+  .gradient-wrapper.active {
+    background: linear-gradient(135deg, #ff6b35, #f7931e, #ffb347, #ffd700);
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.3);
+  }
+
+  /* Ultra-minimal card inside gradient wrapper */
+  .collection-card {
+    background: white;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* This prevents the input section from expanding */
+  }
+
+  /* Compact landscape image area */
+  .product-image-area {
+    height: 140px; /* Image area height */
+    width: 100%;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .product-hero-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Changed from cover to contain to show full image */
+    object-position: center;
+  }
+
+  .product-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+    color: #6b7280;
+  }
+
+  .placeholder-text {
+    font-weight: 600;
+    font-size: 0.8rem; /* Reduced font size */
+    text-align: center;
+    padding: 0.5rem; /* Reduced padding */
+  }
+
+  /* Price overlay (like reference) */
+  .price-overlay {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  /* Redesigned input section - white box that extends full width */
+  .input-section {
+    height: 36px; /* Fixed height for input area */
+    width: 100%; /* Full width inside card */
+    background: white;
+    border-radius: 0 0 8px 8px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px; /* Padding on the section itself */
+    box-sizing: border-box;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .prompt-input {
+    flex: 1; /* Take available space */
+    height: 24px; /* Compact height */
+    padding: 0 50px 0 10px; /* Space for buttons on right, padding on left */
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-family: inherit;
+    background: #fafbfc;
+    outline: none;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    line-height: 1.2;
+  }
+
+  .prompt-input:focus {
+    border-color: #ff6b35;
+    box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.1);
+    background: white;
+  }
+
+  .prompt-input::placeholder {
+    color: #9ca3af;
+    font-weight: 400;
+  }
+
+  /* Action buttons positioned inside input field */
+  .input-actions {
+    position: absolute;
+    right: 15px; /* Position from right edge of input-section */
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .action-btn {
+    width: 18px;
+    height: 18px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .image-btn {
+    background: #06b6d4;
+    color: white;
+  }
+
+  .image-btn:hover {
+    background: #0891b2;
+  }
+
+  .send-btn {
+    background: #ff6b35;
+    color: white;
+  }
+
+  .send-btn:hover:not(:disabled) {
+    background: #e55a2b;
+    transform: scale(1.05);
+  }
+
+  .send-btn:disabled {
+    background: #d1d5db;
+    color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Character counter - hidden in compact mode */
+  .char-counter {
+    display: none;
+  }
+
+  /* File inputs hidden */
+  .file-input,
+  .camera-input {
+    display: none;
+  }
+
+  /* Image source selection modal */
+  .image-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .image-modal.show {
+    display: flex;
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    max-width: 280px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .modal-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #374151;
+  }
+
+  .image-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .image-option {
+    padding: 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .image-option:hover {
+    border-color: #ff6b35;
+    background: #fff8f5;
+  }
+
+  .option-icon {
+    font-size: 1.2rem;
+  }
+
+  .option-text {
+    text-align: left;
+  }
+
+  .option-title {
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.9rem;
+  }
+
+  .option-desc {
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+
+  .modal-close {
+    margin-top: 1rem;
+    padding: 0.4rem 0.8rem;
+    background: #f3f4f6;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #6b7280;
+    font-size: 0.8rem;
+  }
+
+  /* Responsive - show more cards on larger screens */
+  @media (min-width: 768px) {
+    .collection-cards-container {
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .collection-cards-container {
+      grid-template-columns: repeat(4, 1fr);
+      max-width: 1200px;
+    }
+  }
+
+  @media (min-width: 1400px) {
+    .collection-cards-container {
+      grid-template-columns: repeat(5, 1fr);
+      max-width: 1400px;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .collection-cards-container {
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 0.75rem;
+      padding: 0 0.5rem;
+    }
+    
+    .gradient-wrapper {
+      min-width: 240px;
+      max-width: 100%;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .collection-cards-container {
+      grid-template-columns: 1fr;
+      padding: 0;
+    }
+    
+    .gradient-wrapper {
+      width: 100%;
+      max-width: 100%;
+      min-width: auto;
+      height: 170px; /* Accommodate input on mobile */
+    }
+    
+    .product-image-area {
+      height: 130px;
+    }
+    
+    .input-section {
+      height: 32px;
+      padding: 0 8px;
+    }
+    
+    .prompt-input {
+      height: 22px;
+      font-size: 0.7rem;
+      padding: 0 45px 0 8px;
+    }
+    
+    .input-actions {
+      right: 12px;
+      gap: 3px;
+    }
+    
+    .action-btn {
+      width: 16px;
+      height: 16px;
+      font-size: 0.6rem;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Collection Cards",
+  "settings": [
+    {
+      "type": "text",
+      "id": "section_title",
+      "label": "Section Title",
+      "default": "Create Your Design"
+    },
+    {
+      "type": "select",
+      "id": "display_mode",
+      "label": "Display Mode",
+      "options": [
+        {
+          "value": "automatic",
+          "label": "Automatic - Show All Collections"
+        },
+        {
+          "value": "manual",
+          "label": "Manual - Use Blocks Below"
+        }
+      ],
+      "default": "automatic",
+      "info": "Automatic mode shows all collections with products. Manual mode uses the blocks you configure below."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "collection_card",
+      "name": "Collection Card",
+      "settings": [
+        {
+          "type": "text",
+          "id": "collection_title",
+          "label": "Collection Title (for placeholder only)",
+          "default": "T-SHIRTS",
+          "info": "Only shown if no product images are available"
+        },
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Shopify Collection"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Collection Cards",
+      "settings": {
+        "display_mode": "automatic"
+      },
+      "blocks": [
+        {
+          "type": "collection_card",
+          "settings": {
+            "collection_title": "T-SHIRTS"
+          }
+        },
+        {
+          "type": "collection_card",
+          "settings": {
+            "collection_title": "HOODIES"
+          }
+        },
+        {
+          "type": "collection_card",
+          "settings": {
+            "collection_title": "ACCESSORIES"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,239 @@
+{% comment %}
+  Footer section for AI Custom Merchandise Platform
+{% endcomment %}
+
+<footer class="site-footer" role="contentinfo">
+  <div class="footer-container">
+    <div class="footer-content">
+      <!-- Company Info -->
+      <div class="footer-section">
+        <h3 class="footer-title">{{ section.settings.company_name | default: shop.name }}</h3>
+        <p class="footer-description">{{ section.settings.company_description | default: "Create custom merchandise with AI-powered designs based on your mood." }}</p>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="footer-section">
+        <h4 class="footer-heading">Quick Links</h4>
+        <ul class="footer-links">
+          <li><a href="/">Home</a></li>
+          <li><a href="/collections/all">Products</a></li>
+          <li><a href="/pages/customize">Customize</a></li>
+          <li><a href="/pages/about">About</a></li>
+          <li><a href="/pages/contact">Contact</a></li>
+        </ul>
+      </div>
+
+      <!-- Support -->
+      <div class="footer-section">
+        <h4 class="footer-heading">Support</h4>
+        <ul class="footer-links">
+          <li><a href="/pages/faq">FAQ</a></li>
+          <li><a href="/pages/shipping-info">Shipping Info</a></li>
+          <li><a href="/pages/returns">Returns</a></li>
+          <li><a href="/pages/privacy">Privacy Policy</a></li>
+          <li><a href="/pages/terms">Terms of Service</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact Info -->
+      <div class="footer-section">
+        <h4 class="footer-heading">Get in Touch</h4>
+        <div class="footer-contact">
+          {% if section.settings.contact_email %}
+            <p><strong>Email:</strong> {{ section.settings.contact_email }}</p>
+          {% endif %}
+          {% if section.settings.contact_phone %}
+            <p><strong>Phone:</strong> {{ section.settings.contact_phone }}</p>
+          {% endif %}
+          <p><strong>Delivery:</strong> 2-5 business days in India</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Bottom -->
+    <div class="footer-bottom">
+      <div class="footer-bottom-content">
+        <p class="footer-copyright">
+          &copy; {{ 'now' | date: '%Y' }} {{ shop.name }}. All rights reserved.
+        </p>
+        <div class="footer-powered">
+          <p>Powered by AI • Made with ❤️</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: rgb(var(--color-base-text, 31, 41, 55));
+    color: white;
+    padding: 3rem 0 1rem;
+    margin-top: 4rem;
+  }
+
+  .footer-container {
+    max-width: var(--page-width, 120rem);
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+
+  @media screen and (min-width: 750px) {
+    .footer-container {
+      padding: 0 2rem;
+    }
+  }
+
+  .footer-content {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: 1fr;
+    margin-bottom: 2rem;
+  }
+
+  @media screen and (min-width: 750px) {
+    .footer-content {
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 3rem;
+    }
+  }
+
+  .footer-section {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .footer-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: white;
+  }
+
+  .footer-description {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+  }
+
+  .footer-heading {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: white;
+  }
+
+  .footer-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .footer-links li {
+    margin-bottom: 0.5rem;
+  }
+
+  .footer-links a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: color 0.3s ease;
+  }
+
+  .footer-links a:hover {
+    color: white;
+  }
+
+  .footer-contact {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .footer-contact p {
+    margin-bottom: 0.5rem;
+  }
+
+  .footer-contact strong {
+    color: white;
+  }
+
+  .footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 1.5rem;
+  }
+
+  .footer-bottom-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  @media screen and (min-width: 750px) {
+    .footer-bottom-content {
+      flex-direction: row;
+      justify-content: space-between;
+      text-align: left;
+    }
+  }
+
+  .footer-copyright,
+  .footer-powered p {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+  }
+
+  .footer-powered p {
+    font-weight: 500;
+  }
+
+  /* Mobile optimizations */
+  @media screen and (max-width: 749px) {
+    .site-footer {
+      padding: 2rem 0 1rem;
+    }
+    
+    .footer-content {
+      gap: 1.5rem;
+    }
+    
+    .footer-section {
+      text-align: center;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Footer",
+  "settings": [
+    {
+      "type": "text",
+      "id": "company_name",
+      "label": "Company Name",
+      "default": "AI Custom Merchandise"
+    },
+    {
+      "type": "textarea",
+      "id": "company_description",
+      "label": "Company Description",
+      "default": "Create custom merchandise with AI-powered designs based on your mood."
+    },
+    {
+      "type": "text",
+      "id": "contact_email",
+      "label": "Contact Email",
+      "default": "hello@example.com"
+    },
+    {
+      "type": "text",
+      "id": "contact_phone",
+      "label": "Contact Phone",
+      "default": "+91 12345 67890"
+    }
+  ]
+}
+{% endschema %}

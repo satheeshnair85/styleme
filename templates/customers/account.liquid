@@ -1,0 +1,104 @@
+{% comment %}
+  Customer Account Template
+  Displays order history with tracking status for each order
+  Requirements: 13.3
+{% endcomment %}
+
+{{ 'order-tracking.css' | asset_url | stylesheet_tag }}
+
+<div class="customer-account">
+  <div class="customer-account__container">
+    <div class="customer-account__header">
+      <h1 class="customer-account__title">My Account</h1>
+      <a href="{{ routes.account_logout_url }}" class="btn btn-secondary btn-small">Log Out</a>
+    </div>
+
+    <!-- Account Info -->
+    <section class="customer-account__section" aria-label="Account details">
+      <div class="account-info">
+        <div class="account-info__avatar">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
+        <div>
+          <p class="account-info__name">{{ customer.name }}</p>
+          <p class="account-info__email">{{ customer.email }}</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Order History -->
+    <section class="customer-account__section" aria-label="Order history">
+      <h2 class="customer-account__section-title">Order History</h2>
+
+      {% if customer.orders.size > 0 %}
+        <div class="order-list">
+          {% for order in customer.orders %}
+            <a href="{{ order.customer_url }}" class="order-card" aria-label="Order {{ order.name }}">
+              <div class="order-card__header">
+                <div>
+                  <span class="order-card__name">{{ order.name }}</span>
+                  <span class="order-card__date">{{ order.created_at | date: "%b %d, %Y" }}</span>
+                </div>
+                <span class="order-card__total">{{ order.total_price | money }}</span>
+              </div>
+
+              <!-- Compact tracking status -->
+              {% render 'order-tracking-status', order: order, compact: true %}
+
+              <div class="order-card__items">
+                {% for line_item in order.line_items limit: 3 %}
+                  <span class="order-card__item-name">{{ line_item.title }}{% unless forloop.last %},{% endunless %}</span>
+                {% endfor %}
+                {% if order.line_items.size > 3 %}
+                  <span class="order-card__item-more">+{{ order.line_items.size | minus: 3 }} more</span>
+                {% endif %}
+              </div>
+
+              <div class="order-card__arrow" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+
+        {% comment %} Pagination {% endcomment %}
+        {% paginate customer.orders by 10 %}
+          {% if paginate.pages > 1 %}
+            <nav class="order-pagination" aria-label="Order history pagination">
+              {% if paginate.previous %}
+                <a href="{{ paginate.previous.url }}" class="btn btn-secondary btn-small">Previous</a>
+              {% endif %}
+              <span class="order-pagination__info">Page {{ paginate.current_page }} of {{ paginate.pages }}</span>
+              {% if paginate.next %}
+                <a href="{{ paginate.next.url }}" class="btn btn-secondary btn-small">Next</a>
+              {% endif %}
+            </nav>
+          {% endif %}
+        {% endpaginate %}
+      {% else %}
+        <div class="order-empty">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+          <p>You haven't placed any orders yet.</p>
+          <a href="/pages/customize" class="btn btn-primary">Start Customizing</a>
+        </div>
+      {% endif %}
+    </section>
+
+    <!-- Default Addresses -->
+    {% if customer.default_address %}
+      <section class="customer-account__section" aria-label="Default address">
+        <h2 class="customer-account__section-title">Default Address</h2>
+        <address class="order-address">
+          {{ customer.default_address | format_address }}
+        </address>
+      </section>
+    {% endif %}
+  </div>
+</div>

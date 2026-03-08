@@ -1,0 +1,1170 @@
+{% comment %}
+  Collection template - displays products with filters and generated design overlay
+{% endcomment %}
+
+<div class="collection-page">
+  <div class="collection-container">
+    
+    <!-- Collection Header -->
+    <div class="collection-header">
+      <div class="breadcrumb">
+        <a href="/">Home</a> / <a href="/collections">Collections</a> / <span>{{ collection.title }}</span>
+      </div>
+      <h1 class="collection-title">{{ collection.title }}</h1>
+      {% if collection.description != blank %}
+        <div class="collection-description">{{ collection.description }}</div>
+      {% endif %}
+      
+      <!-- Generated Design Preview (if coming from homepage) -->
+      <div id="generated-design-preview" class="design-preview-banner" style="display: none;">
+        <div class="design-preview-content">
+          <img id="generated-design-image" src="" alt="Generated Design" class="design-preview-img">
+          <div class="design-preview-text">
+            <h3>Your AI Generated Design</h3>
+            <p id="design-prompt-text"></p>
+            <p class="design-instruction">Select a product below to apply this design</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="collection-content">
+      
+      <!-- Filters Sidebar -->
+      <aside class="filters-sidebar">
+        <h3 class="filters-title">FILTERS</h3>
+        
+        <!-- Categories -->
+        <div class="filter-group">
+          <h4 class="filter-group-title">CATEGORIES</h4>
+          <div class="filter-options">
+            <label class="filter-option">
+              <input type="checkbox" name="category" value="tshirts" checked>
+              <span class="checkmark"></span>
+              T-shirts <span class="count">({{ collections.tshirts.products.size | default: 0 }})</span>
+            </label>
+            <label class="filter-option">
+              <input type="checkbox" name="category" value="lounge">
+              <span class="checkmark"></span>
+              Lounge T-shirts <span class="count">({{ collections.lounge.products.size | default: 0 }})</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Size -->
+        <div class="filter-group">
+          <h4 class="filter-group-title">SIZE</h4>
+          <div class="filter-options">
+            {% comment %}Get sizes from product variants{% endcomment %}
+            {% assign all_sizes = '' %}
+            {% for product in collection.products %}
+              {% for variant in product.variants %}
+                {% assign size_value = '' %}
+                {% if variant.option1 contains 'Size' or variant.option1 == 'XS' or variant.option1 == 'S' or variant.option1 == 'M' or variant.option1 == 'L' or variant.option1 == 'XL' or variant.option1 == 'XXL' %}
+                  {% assign size_value = variant.option1 %}
+                {% elsif variant.option2 contains 'Size' or variant.option2 == 'XS' or variant.option2 == 'S' or variant.option2 == 'M' or variant.option2 == 'L' or variant.option2 == 'XL' or variant.option2 == 'XXL' %}
+                  {% assign size_value = variant.option2 %}
+                {% elsif variant.option3 contains 'Size' or variant.option3 == 'XS' or variant.option3 == 'S' or variant.option3 == 'M' or variant.option3 == 'L' or variant.option3 == 'XL' or variant.option3 == 'XXL' %}
+                  {% assign size_value = variant.option3 %}
+                {% endif %}
+                {% if size_value != blank %}
+                  {% unless all_sizes contains size_value %}
+                    {% assign all_sizes = all_sizes | append: size_value | append: ',' %}
+                  {% endunless %}
+                {% endif %}
+              {% endfor %}
+            {% endfor %}
+            
+            {% assign size_array = all_sizes | split: ',' %}
+            {% assign size_order = 'XS,S,M,L,XL,XXL' | split: ',' %}
+            
+            {% for size in size_order %}
+              {% if size_array contains size %}
+                <label class="filter-option">
+                  <input type="checkbox" name="size" value="{{ size | downcase }}">
+                  <span class="checkmark"></span>
+                  {{ size }} <span class="count">({{ collection.products | where: 'variants', size | size }})</span>
+                </label>
+              {% endif %}
+            {% endfor %}
+            
+            {% comment %}Show other sizes not in standard order{% endcomment %}
+            {% for size in size_array %}
+              {% unless size == blank or size_order contains size %}
+                <label class="filter-option">
+                  <input type="checkbox" name="size" value="{{ size | downcase }}">
+                  <span class="checkmark"></span>
+                  {{ size }} <span class="count">(1)</span>
+                </label>
+              {% endunless %}
+            {% endfor %}
+            
+            {% comment %}Fallback sizes if no variants found{% endcomment %}
+            {% if size_array.size == 0 %}
+              <label class="filter-option">
+                <input type="checkbox" name="size" value="s">
+                <span class="checkmark"></span>
+                S <span class="count">(0)</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" name="size" value="m">
+                <span class="checkmark"></span>
+                M <span class="count">(0)</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" name="size" value="l">
+                <span class="checkmark"></span>
+                L <span class="count">(0)</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" name="size" value="xl">
+                <span class="checkmark"></span>
+                XL <span class="count">(0)</span>
+              </label>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Brand -->
+        <div class="filter-group">
+          <h4 class="filter-group-title">BRAND</h4>
+          <div class="filter-options">
+            {% assign brands = collection.products | map: 'vendor' | uniq %}
+            {% for brand in brands limit: 8 %}
+              <label class="filter-option">
+                <input type="checkbox" name="brand" value="{{ brand | downcase }}">
+                <span class="checkmark"></span>
+                {{ brand }} <span class="count">({{ collection.products | where: 'vendor', brand | size }})</span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Price Range -->
+        <div class="filter-group">
+          <h4 class="filter-group-title">PRICE</h4>
+          <div class="price-range">
+            <input type="range" id="price-min" min="0" max="5000" value="0" class="price-slider">
+            <input type="range" id="price-max" min="0" max="5000" value="5000" class="price-slider">
+            <div class="price-display">
+              ₹<span id="price-min-display">0</span> - ₹<span id="price-max-display">5000</span>+
+            </div>
+          </div>
+        </div>
+
+        <!-- Color -->
+        <div class="filter-group">
+          <h4 class="filter-group-title">COLOR</h4>
+          <div class="color-options">
+            {% comment %}Get colors from product variants{% endcomment %}
+            {% assign all_colors = '' %}
+            {% for product in collection.products %}
+              {% for variant in product.variants %}
+                {% if variant.option1 contains 'Color' or variant.option2 contains 'Color' or variant.option3 contains 'Color' %}
+                  {% assign color_value = variant.option1 %}
+                  {% if variant.option2 contains 'Color' %}{% assign color_value = variant.option2 %}{% endif %}
+                  {% if variant.option3 contains 'Color' %}{% assign color_value = variant.option3 %}{% endif %}
+                  {% unless all_colors contains color_value %}
+                    {% assign all_colors = all_colors | append: color_value | append: ',' %}
+                  {% endunless %}
+                {% endif %}
+              {% endfor %}
+            {% endfor %}
+            
+            {% assign color_array = all_colors | split: ',' %}
+            {% for color in color_array %}
+              {% unless color == blank %}
+                {% assign color_lower = color | downcase | strip %}
+                {% assign color_bg = '#6b7280' %}
+                {% case color_lower %}
+                  {% when 'black' %}{% assign color_bg = '#000000' %}
+                  {% when 'white' %}{% assign color_bg = '#ffffff' %}
+                  {% when 'blue' %}{% assign color_bg = '#3b82f6' %}
+                  {% when 'navy' %}{% assign color_bg = '#1e3a8a' %}
+                  {% when 'green' %}{% assign color_bg = '#10b981' %}
+                  {% when 'grey', 'gray' %}{% assign color_bg = '#6b7280' %}
+                  {% when 'red' %}{% assign color_bg = '#ef4444' %}
+                  {% when 'yellow' %}{% assign color_bg = '#eab308' %}
+                  {% when 'purple' %}{% assign color_bg = '#8b5cf6' %}
+                {% endcase %}
+                <div class="color-option" 
+                     data-color="{{ color_lower }}" 
+                     style="background: {{ color_bg }}; {% if color_lower == 'white' %}border: 1px solid #ddd;{% endif %}" 
+                     title="{{ color }}"></div>
+              {% endunless %}
+            {% endfor %}
+            
+            {% comment %}Fallback colors if no variants found{% endcomment %}
+            {% if color_array.size == 0 %}
+              <div class="color-option" data-color="black" style="background: #000;" title="Black"></div>
+              <div class="color-option" data-color="white" style="background: #fff; border: 1px solid #ddd;" title="White"></div>
+              <div class="color-option" data-color="blue" style="background: #3b82f6;" title="Blue"></div>
+              <div class="color-option" data-color="navy" style="background: #1e3a8a;" title="Navy Blue"></div>
+              <div class="color-option" data-color="green" style="background: #10b981;" title="Green"></div>
+              <div class="color-option" data-color="grey" style="background: #6b7280;" title="Grey"></div>
+              <div class="color-option" data-color="red" style="background: #ef4444;" title="Red"></div>
+            {% endif %}
+          </div>
+        </div>
+      </aside>
+
+      <!-- Products Grid -->
+      <main class="products-section">
+        
+        <!-- Sort and Count -->
+        <div class="products-header">
+          <div class="products-count">
+            <span id="products-showing">{{ collection.products.size }}</span> items
+          </div>
+          <div class="sort-options">
+            <label for="sort-select">Sort by:</label>
+            <select id="sort-select" class="sort-dropdown">
+              <option value="recommended">Recommended</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="newest">Newest First</option>
+              <option value="rating">Customer Rating</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Products Grid -->
+        {% if collection.products.size > 0 %}
+          <div class="products-grid" id="products-grid">
+            {% for product in collection.products %}
+              <div class="product-card" 
+                   data-product-handle="{{ product.handle }}"
+                   data-price="{{ product.price }}"
+                   data-vendor="{{ product.vendor | downcase }}"
+                   data-color="{{ product.tags | join: ',' | downcase }}">
+                
+                <div class="product-image-container">
+                  {% if product.featured_image %}
+                    <img src="{{ product.featured_image | img_url: '400x' }}" 
+                         alt="{{ product.title }}" 
+                         class="product-image"
+                         loading="lazy">
+                  {% else %}
+                    <!-- Placeholder image if no featured image -->
+                    <div class="product-image-placeholder">
+                      <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21,15 16,10 5,21"/>
+                      </svg>
+                    </div>
+                  {% endif %}
+                  
+                  <!-- Generated Design Overlay -->
+                  <div class="design-overlay" style="display: none;">
+                    <img class="design-overlay-image" src="" alt="Your Design">
+                  </div>
+                  
+                  <!-- Product Actions -->
+                  <div class="product-actions">
+                    <button class="action-btn preview-btn" onclick="previewDesignOnProduct('{{ product.handle }}')">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    </button>
+                    <button class="action-btn customize-btn" onclick="customizeProduct('{{ product.handle }}')">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <!-- Rating -->
+                  <div class="product-rating">
+                    <div class="stars">
+                      {% assign rating = 4.5 %}
+                      {% for i in (1..5) %}
+                        <span class="star {% if i <= rating %}filled{% endif %}">★</span>
+                      {% endfor %}
+                    </div>
+                    <span class="rating-count">{{ product.id | modulo: 1000 | plus: 100 }}</span>
+                  </div>
+                </div>
+
+                <div class="product-info">
+                  <div class="product-brand">{{ product.vendor }}</div>
+                  <h3 class="product-title">{{ product.title }}</h3>
+                  <div class="product-pricing">
+                    <span class="current-price">{{ product.price | money }}</span>
+                    {% if product.compare_at_price > product.price %}
+                      <span class="original-price">{{ product.compare_at_price | money }}</span>
+                      <span class="discount">
+                        ({{ product.compare_at_price | minus: product.price | times: 100 | divided_by: product.compare_at_price }}% OFF)
+                      </span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% elsif collections.all.products.size > 0 %}
+          <!-- Fallback: Show products from 'all' collection if current collection is empty -->
+          <div class="products-grid" id="products-grid">
+            <p style="grid-column: 1/-1; text-align: center; padding: 1rem; background: #fef3cd; border-radius: 8px; margin-bottom: 1rem;">
+              <strong>Note:</strong> Showing all products since "{{ collection.title }}" collection is empty.
+            </p>
+            {% for product in collections.all.products limit: 12 %}
+              <div class="product-card" 
+                   data-product-handle="{{ product.handle }}"
+                   data-price="{{ product.price }}"
+                   data-vendor="{{ product.vendor | downcase }}"
+                   data-color="{{ product.tags | join: ',' | downcase }}">
+                
+                <div class="product-image-container">
+                  {% if product.featured_image %}
+                    <img src="{{ product.featured_image | img_url: '400x' }}" 
+                         alt="{{ product.title }}" 
+                         class="product-image"
+                         loading="lazy">
+                  {% else %}
+                    <!-- Placeholder image if no featured image -->
+                    <div class="product-image-placeholder">
+                      <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21,15 16,10 5,21"/>
+                      </svg>
+                    </div>
+                  {% endif %}
+                  
+                  <!-- Generated Design Overlay -->
+                  <div class="design-overlay" style="display: none;">
+                    <img class="design-overlay-image" src="" alt="Your Design">
+                  </div>
+                  
+                  <!-- Product Actions -->
+                  <div class="product-actions">
+                    <button class="action-btn preview-btn" onclick="previewDesignOnProduct('{{ product.handle }}')">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    </button>
+                    <button class="action-btn customize-btn" onclick="customizeProduct('{{ product.handle }}')">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <!-- Rating -->
+                  <div class="product-rating">
+                    <div class="stars">
+                      {% assign rating = 4.5 %}
+                      {% for i in (1..5) %}
+                        <span class="star {% if i <= rating %}filled{% endif %}">★</span>
+                      {% endfor %}
+                    </div>
+                    <span class="rating-count">{{ product.id | modulo: 1000 | plus: 100 }}</span>
+                  </div>
+                </div>
+
+                <div class="product-info">
+                  <div class="product-brand">{{ product.vendor }}</div>
+                  <h3 class="product-title">{{ product.title }}</h3>
+                  <div class="product-pricing">
+                    <span class="current-price">{{ product.price | money }}</span>
+                    {% if product.compare_at_price > product.price %}
+                      <span class="original-price">{{ product.compare_at_price | money }}</span>
+                      <span class="discount">
+                        ({{ product.compare_at_price | minus: product.price | times: 100 | divided_by: product.compare_at_price }}% OFF)
+                      </span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="no-products">
+            <h3>No products found in this collection</h3>
+            
+            <div class="debug-info" style="background: #fef3cd; padding: 1rem; border-radius: 8px; margin: 1rem 0; text-align: left;">
+              <p><strong>🔍 Debug Information:</strong></p>
+              <p>Collection Handle: <code>{{ collection.handle }}</code></p>
+              <p>Collection ID: <code>{{ collection.id }}</code></p>
+              <p>Collection Title: <code>{{ collection.title }}</code></p>
+              <p>Products Count: <code>{{ collection.products.size }}</code></p>
+              <p>All Products Count: <code>{{ collections.all.products.size }}</code></p>
+              
+              <hr style="margin: 1rem 0;">
+              
+              <p><strong>📋 Available Collections:</strong></p>
+              <ul style="margin: 0.5rem 0;">
+                {% for coll in collections %}
+                  <li><code>{{ coll[0] }}</code> → {{ coll[1].products.size }} products</li>
+                {% endfor %}
+              </ul>
+              
+              {% if collections.all.products.size > 0 %}
+                <hr style="margin: 1rem 0;">
+                <p><strong>🛍️ All Products in Store:</strong></p>
+                <ul style="margin: 0.5rem 0;">
+                  {% for product in collections.all.products limit: 10 %}
+                    <li>
+                      <strong>{{ product.title }}</strong> (handle: <code>{{ product.handle }}</code>)
+                      <br><small>Status: {{ product.available | default: 'Unknown' }}, Vendor: {{ product.vendor }}, Type: {{ product.type }}</small>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            </div>
+            
+            <div class="troubleshooting-steps" style="background: #e0f2fe; padding: 1rem; border-radius: 8px; margin: 1rem 0; text-align: left;">
+              <p><strong>🔧 Troubleshooting Steps:</strong></p>
+              <ol style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                <li><strong>Check Product Status:</strong> Go to Shopify Admin → Products → Make sure status is "Active" (not Draft)</li>
+                <li><strong>Enable Sales Channel:</strong> In product settings, enable "Online Store" sales channel</li>
+                <li><strong>Add to Collection:</strong> In product Organization section, add to "TSHIRTS" collection</li>
+                <li><strong>Verify Collection Type:</strong> Go to Collections → TSHIRTS → Check if it's Manual or Automated</li>
+                <li><strong>Collection Conditions:</strong> If automated, verify conditions match your product tags/type</li>
+              </ol>
+            </div>
+          </div>
+        {% endif %}
+      </main>
+    </div>
+  </div>
+</div>
+
+<script>
+// Collection page functionality
+document.addEventListener('DOMContentLoaded', function() {
+  initializeCollectionPage();
+  initializeFilters();
+  checkForGeneratedDesign();
+});
+
+function initializeCollectionPage() {
+  // Initialize sort functionality
+  const sortSelect = document.getElementById('sort-select');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', function() {
+      sortProducts(this.value);
+    });
+  }
+  
+  // Initialize price range sliders
+  const priceMin = document.getElementById('price-min');
+  const priceMax = document.getElementById('price-max');
+  if (priceMin && priceMax) {
+    priceMin.addEventListener('input', updatePriceDisplay);
+    priceMax.addEventListener('input', updatePriceDisplay);
+  }
+}
+
+function checkForGeneratedDesign() {
+  // Check URL parameters for generated design
+  const urlParams = new URLSearchParams(window.location.search);
+  const designUrl = urlParams.get('design_url');
+  const designPrompt = urlParams.get('design_prompt');
+  
+  if (designUrl) {
+    showGeneratedDesign(designUrl, designPrompt);
+  }
+}
+
+function showGeneratedDesign(designUrl, prompt) {
+  const previewBanner = document.getElementById('generated-design-preview');
+  const designImage = document.getElementById('generated-design-image');
+  const promptText = document.getElementById('design-prompt-text');
+  
+  if (previewBanner && designImage) {
+    designImage.src = designUrl;
+    if (promptText && prompt) {
+      promptText.textContent = `"${prompt}"`;
+    }
+    previewBanner.style.display = 'block';
+    
+    // Store design URL globally for product interactions
+    window.currentDesignUrl = designUrl;
+    window.currentDesignPrompt = prompt;
+  }
+}
+
+function previewDesignOnProduct(productHandle) {
+  if (!window.currentDesignUrl) {
+    alert('No design available. Please generate a design first.');
+    return;
+  }
+  
+  // Show design overlay on the product card
+  const productCard = document.querySelector(`[data-product-handle="${productHandle}"]`);
+  const designOverlay = productCard.querySelector('.design-overlay');
+  const overlayImage = productCard.querySelector('.design-overlay-image');
+  
+  if (designOverlay && overlayImage) {
+    overlayImage.src = window.currentDesignUrl;
+    designOverlay.style.display = 'block';
+    
+    // Add preview class for styling
+    productCard.classList.add('design-preview-active');
+  }
+}
+
+function customizeProduct(productHandle) {
+  // Navigate to product customization with the generated design
+  const params = new URLSearchParams({
+    design_url: window.currentDesignUrl || '',
+    design_prompt: window.currentDesignPrompt || '',
+    source: 'collection'
+  });
+  
+  window.location.href = `/products/${productHandle}?${params.toString()}`;
+}
+
+function initializeFilters() {
+  // Category filters
+  const categoryFilters = document.querySelectorAll('input[name="category"]');
+  categoryFilters.forEach(filter => {
+    filter.addEventListener('change', applyFilters);
+  });
+  
+  // Brand filters
+  const brandFilters = document.querySelectorAll('input[name="brand"]');
+  brandFilters.forEach(filter => {
+    filter.addEventListener('change', applyFilters);
+  });
+  
+  // Size filters
+  const sizeFilters = document.querySelectorAll('input[name="size"]');
+  sizeFilters.forEach(filter => {
+    filter.addEventListener('change', applyFilters);
+  });
+  
+  // Color filters
+  const colorOptions = document.querySelectorAll('.color-option');
+  colorOptions.forEach(option => {
+    option.addEventListener('click', function() {
+      this.classList.toggle('selected');
+      applyFilters();
+    });
+  });
+}
+
+function applyFilters() {
+  const productCards = document.querySelectorAll('.product-card');
+  let visibleCount = 0;
+  
+  // Get selected filters
+  const selectedCategories = Array.from(document.querySelectorAll('input[name="category"]:checked')).map(cb => cb.value);
+  const selectedBrands = Array.from(document.querySelectorAll('input[name="brand"]:checked')).map(cb => cb.value);
+  const selectedSizes = Array.from(document.querySelectorAll('input[name="size"]:checked')).map(cb => cb.value);
+  const selectedColors = Array.from(document.querySelectorAll('.color-option.selected')).map(el => el.dataset.color);
+  
+  // Get price range
+  const priceMin = parseInt(document.getElementById('price-min').value);
+  const priceMax = parseInt(document.getElementById('price-max').value);
+  
+  productCards.forEach(card => {
+    let show = true;
+    
+    // Check category filter
+    if (selectedCategories.length > 0) {
+      // For now, assume all products match selected categories
+      // In a real implementation, you'd check product.type or tags
+    }
+    
+    // Check brand filter
+    if (selectedBrands.length > 0) {
+      const productBrand = card.dataset.vendor;
+      if (!selectedBrands.includes(productBrand)) {
+        show = false;
+      }
+    }
+    
+    // Check size filter
+    if (selectedSizes.length > 0) {
+      const productSizes = card.dataset.sizes ? card.dataset.sizes.split(',') : [];
+      const hasMatchingSize = selectedSizes.some(size => 
+        productSizes.some(productSize => productSize.toLowerCase().includes(size))
+      );
+      if (!hasMatchingSize) {
+        show = false;
+      }
+    }
+    
+    // Check price filter
+    const productPrice = parseInt(card.dataset.price);
+    if (productPrice < priceMin || productPrice > priceMax) {
+      show = false;
+    }
+    
+    // Check color filter
+    if (selectedColors.length > 0) {
+      const productColors = card.dataset.color.split(',');
+      const hasMatchingColor = selectedColors.some(color => 
+        productColors.some(productColor => productColor.includes(color))
+      );
+      if (!hasMatchingColor) {
+        show = false;
+      }
+    }
+    
+    // Show/hide product
+    if (show) {
+      card.style.display = 'block';
+      visibleCount++;
+    } else {
+      card.style.display = 'none';
+    }
+  });
+  
+  // Update products count
+  const countElement = document.getElementById('products-showing');
+  if (countElement) {
+    countElement.textContent = visibleCount;
+  }
+}
+
+function updatePriceDisplay() {
+  const priceMin = document.getElementById('price-min');
+  const priceMax = document.getElementById('price-max');
+  const minDisplay = document.getElementById('price-min-display');
+  const maxDisplay = document.getElementById('price-max-display');
+  
+  if (minDisplay) minDisplay.textContent = priceMin.value;
+  if (maxDisplay) maxDisplay.textContent = priceMax.value;
+  
+  // Apply filters when price changes
+  applyFilters();
+}
+
+function sortProducts(sortBy) {
+  const productsGrid = document.getElementById('products-grid');
+  const productCards = Array.from(productsGrid.querySelectorAll('.product-card'));
+  
+  productCards.sort((a, b) => {
+    switch (sortBy) {
+      case 'price-low':
+        return parseInt(a.dataset.price) - parseInt(b.dataset.price);
+      case 'price-high':
+        return parseInt(b.dataset.price) - parseInt(a.dataset.price);
+      case 'newest':
+        // For demo purposes, reverse order
+        return b.dataset.productHandle.localeCompare(a.dataset.productHandle);
+      case 'rating':
+        // For demo purposes, random sort
+        return Math.random() - 0.5;
+      default: // recommended
+        return 0;
+    }
+  });
+  
+  // Re-append sorted cards
+  productCards.forEach(card => productsGrid.appendChild(card));
+}
+</script>
+
+<style>
+  .collection-page {
+    padding: 1rem 0;
+    background: #f8fafc;
+    min-height: 100vh;
+  }
+
+  .collection-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+
+  /* Header */
+  .collection-header {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  .breadcrumb {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+  }
+
+  .breadcrumb a {
+    color: #6366f1;
+    text-decoration: none;
+  }
+
+  .collection-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+  }
+
+  .collection-description {
+    color: #6b7280;
+    max-width: 600px;
+  }
+
+  /* Generated Design Preview Banner */
+  .design-preview-banner {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .design-preview-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .design-preview-img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+
+  .design-preview-text h3 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+
+  .design-preview-text p {
+    margin: 0;
+    opacity: 0.9;
+  }
+
+  .design-instruction {
+    font-size: 0.875rem;
+    opacity: 0.8;
+  }
+
+  /* Main Content Layout */
+  .collection-content {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 2rem;
+  }
+
+  /* Filters Sidebar */
+  .filters-sidebar {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    height: fit-content;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  .filters-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  .filter-group {
+    margin-bottom: 2rem;
+  }
+
+  .filter-group-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .filter-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .filter-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: #4b5563;
+  }
+
+  .filter-option input[type="checkbox"] {
+    display: none;
+  }
+
+  .checkmark {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #d1d5db;
+    border-radius: 3px;
+    position: relative;
+    transition: all 0.2s;
+  }
+
+  .filter-option input:checked + .checkmark {
+    background: #6366f1;
+    border-color: #6366f1;
+  }
+
+  .filter-option input:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    top: -2px;
+    left: 2px;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .count {
+    color: #9ca3af;
+    font-size: 0.75rem;
+    margin-left: auto;
+  }
+
+  /* Price Range */
+  .price-range {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .price-slider {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: #e5e7eb;
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  .price-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #6366f1;
+    cursor: pointer;
+  }
+
+  .price-display {
+    font-size: 0.875rem;
+    color: #4b5563;
+    text-align: center;
+    font-weight: 500;
+  }
+
+  /* Color Options */
+  .color-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .color-option {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .color-option:hover,
+  .color-option.selected {
+    border-color: #6366f1;
+    transform: scale(1.1);
+  }
+
+  /* Products Section */
+  .products-section {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  .products-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+  }
+
+  .products-count {
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+
+  .sort-options {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+
+  .sort-dropdown {
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    background: white;
+  }
+
+  /* Products Grid */
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+
+  .product-card {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s;
+    border: 1px solid #e5e7eb;
+    position: relative;
+  }
+
+  .product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  }
+
+  .product-image-container {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+  }
+
+  .product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+  }
+
+  .product-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    color: #9ca3af;
+  }
+
+  .product-card:hover .product-image {
+    transform: scale(1.05);
+  }
+
+  /* Design Overlay */
+  .design-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .design-preview-active .design-overlay {
+    opacity: 1;
+  }
+
+  .design-overlay-image {
+    max-width: 80%;
+    max-height: 80%;
+    object-fit: contain;
+    border-radius: 4px;
+  }
+
+  /* Product Actions */
+  .product-actions {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .product-card:hover .product-actions {
+    opacity: 1;
+  }
+
+  .action-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.9);
+    color: #374151;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    backdrop-filter: blur(4px);
+  }
+
+  .action-btn:hover {
+    background: #6366f1;
+    color: white;
+    transform: scale(1.1);
+  }
+
+  /* Product Rating */
+  .product-rating {
+    position: absolute;
+    bottom: 0.75rem;
+    left: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: rgba(255,255,255,0.9);
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    backdrop-filter: blur(4px);
+  }
+
+  .stars {
+    display: flex;
+    gap: 1px;
+  }
+
+  .star {
+    color: #d1d5db;
+    font-size: 0.75rem;
+  }
+
+  .star.filled {
+    color: #fbbf24;
+  }
+
+  .rating-count {
+    color: #6b7280;
+    font-size: 0.75rem;
+  }
+
+  /* Product Info */
+  .product-info {
+    padding: 1rem;
+  }
+
+  .product-brand {
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+  }
+
+  .product-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+  }
+
+  .product-pricing {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .current-price {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  .original-price {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    text-decoration: line-through;
+  }
+
+  .discount {
+    font-size: 0.75rem;
+    color: #059669;
+    font-weight: 500;
+  }
+
+  /* No Products */
+  .no-products {
+    text-align: center;
+    padding: 3rem;
+    color: #6b7280;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 1024px) {
+    .collection-content {
+      grid-template-columns: 1fr;
+    }
+    
+    .filters-sidebar {
+      order: 2;
+    }
+    
+    .products-section {
+      order: 1;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .collection-container {
+      padding: 0 0.5rem;
+    }
+    
+    .products-grid {
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+      padding: 1rem;
+    }
+    
+    .design-preview-content {
+      flex-direction: column;
+      text-align: center;
+    }
+    
+    .products-header {
+      flex-direction: column;
+      gap: 1rem;
+      align-items: stretch;
+    }
+  }
+</style>

@@ -1,0 +1,196 @@
+{% comment %}
+  Hero section for landing page with AI design examples and value proposition
+{% endcomment %}
+
+<section class="hero-section">
+  <div class="hero-container">
+    <div class="hero-content">
+      <h1 class="hero-title">{{ section.settings.hero_title | default: "Create Your Custom Merchandise with AI" }}</h1>
+      <p class="hero-description">{{ section.settings.hero_description | default: "Transform your mood into unique designs. Powered by AI, personalized by you." }}</p>
+      
+      <!-- Value Proposition Points -->
+      <div class="hero-features">
+        <div class="feature-item">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+          </svg>
+          <span>AI-Powered Design Generation</span>
+        </div>
+        <div class="feature-item">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"/>
+          </svg>
+          <span>Multiple Product Options</span>
+        </div>
+        <div class="feature-item">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+          <span>Fast 60-Second Generation</span>
+        </div>
+      </div>
+
+      <!-- Pricing Information -->
+      <div class="hero-pricing">
+        <p class="pricing-text">Starting from <strong>${{ section.settings.base_price | default: "19.99" }}</strong> + <strong>${{ section.settings.ai_fee | default: "5.00" }}</strong> AI design fee</p>
+      </div>
+      
+      <div class="hero-cta">
+        <a href="{{ section.settings.cta_link | default: '/pages/customize' }}" class="btn btn-primary btn-large">
+          {{ section.settings.cta_text | default: "Start Customizing" }}
+        </a>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      {% if section.settings.hero_image %}
+        <div class="hero-image">
+          <img
+            src="{{ section.settings.hero_image | img_url: '800x' }}"
+            srcset="
+              {{ section.settings.hero_image | img_url: '400x' }} 400w,
+              {{ section.settings.hero_image | img_url: '600x' }} 600w,
+              {{ section.settings.hero_image | img_url: '800x' }} 800w,
+              {{ section.settings.hero_image | img_url: '1200x' }} 1200w"
+            sizes="(max-width: 749px) 100vw, 50vw"
+            alt="{{ section.settings.hero_title }}"
+            width="800"
+            height="600"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async">
+        </div>
+      {% endif %}
+
+      <!-- AI Design Examples -->
+      <div class="design-examples">
+        <h3 class="examples-title">{{ section.settings.examples_title | default: "AI Design Examples" }}</h3>
+        <div class="examples-grid">
+          {% for block in section.blocks %}
+            {% if block.type == 'design_example' %}
+              <div class="example-item" {{ block.shopify_attributes }}>
+                {% if block.settings.example_image %}
+                  <img
+                    src="{{ block.settings.example_image | img_url: '200x' }}"
+                    srcset="
+                      {{ block.settings.example_image | img_url: '100x' }} 100w,
+                      {{ block.settings.example_image | img_url: '150x' }} 150w,
+                      {{ block.settings.example_image | img_url: '200x' }} 200w,
+                      {{ block.settings.example_image | img_url: '300x' }} 300w"
+                    sizes="(max-width: 749px) 33vw, 150px"
+                    alt="{{ block.settings.example_prompt }}"
+                    width="200"
+                    height="200"
+                    loading="lazy"
+                    decoding="async">
+                {% endif %}
+                <p class="example-prompt">"{{ block.settings.example_prompt }}"</p>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Hero Section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "hero_title",
+      "label": "Hero Title",
+      "default": "Create Your Custom Merchandise with AI"
+    },
+    {
+      "type": "textarea",
+      "id": "hero_description",
+      "label": "Hero Description",
+      "default": "Transform your mood into unique designs. Powered by AI, personalized by you."
+    },
+    {
+      "type": "text",
+      "id": "base_price",
+      "label": "Base Product Price",
+      "default": "19.99",
+      "info": "Starting price for products (without AI fee)"
+    },
+    {
+      "type": "text",
+      "id": "ai_fee",
+      "label": "AI Design Fee",
+      "default": "5.00",
+      "info": "Additional fee for AI design generation"
+    },
+    {
+      "type": "text",
+      "id": "cta_text",
+      "label": "CTA Button Text",
+      "default": "Start Customizing"
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "CTA Button Link"
+    },
+    {
+      "type": "image_picker",
+      "id": "hero_image",
+      "label": "Hero Image"
+    },
+    {
+      "type": "text",
+      "id": "examples_title",
+      "label": "Design Examples Title",
+      "default": "AI Design Examples"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "design_example",
+      "name": "Design Example",
+      "settings": [
+        {
+          "type": "text",
+          "id": "example_prompt",
+          "label": "Example Prompt",
+          "default": "Happy summer vibes"
+        },
+        {
+          "type": "image_picker",
+          "id": "example_image",
+          "label": "Example Design Image"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Hero Section",
+      "blocks": [
+        {
+          "type": "design_example",
+          "settings": {
+            "example_prompt": "Happy summer vibes"
+          }
+        },
+        {
+          "type": "design_example",
+          "settings": {
+            "example_prompt": "Minimalist geometric"
+          }
+        },
+        {
+          "type": "design_example",
+          "settings": {
+            "example_prompt": "Vintage retro style"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

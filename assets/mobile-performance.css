@@ -1,0 +1,134 @@
+/* ===================================
+   Mobile Performance CSS
+   Optimizations for fast page loads on 4G mobile connections.
+   Requirements: 22.11, 22.12, 16.2, 16.3
+   =================================== */
+
+/* ── Lazy-loaded image transitions ── */
+img[data-lazy-src],
+img[data-srcset] {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+img.lazy-loaded,
+img[data-lazy-loaded="true"] {
+  opacity: 1;
+}
+
+/* ── Content-visibility for off-screen sections ── */
+.product-grid-section,
+.design-examples,
+.product-info {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
+/* ── Responsive images ── */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ── Optimized image rendering ── */
+img {
+  image-rendering: auto;
+}
+
+.product-card-image img,
+.hero-image img,
+.example-item img,
+.design-card__image,
+.design-preview__design-image {
+  will-change: auto;
+  contain: layout style;
+}
+
+/* ── Explicit dimensions to prevent layout shift ── */
+.product-card-image {
+  aspect-ratio: 1;
+  overflow: hidden;
+  background-color: rgb(var(--color-base-background-2, 249, 250, 251));
+}
+
+.hero-image {
+  aspect-ratio: 4/3;
+  overflow: hidden;
+  background-color: rgb(var(--color-base-background-2, 249, 250, 251));
+  border-radius: 12px;
+}
+
+.example-item img {
+  aspect-ratio: 1;
+  object-fit: cover;
+  background-color: rgb(var(--color-base-background-2, 249, 250, 251));
+}
+
+.design-card__image-wrap {
+  aspect-ratio: 1;
+  overflow: hidden;
+  background-color: rgb(var(--color-base-background-2, 249, 250, 251));
+}
+
+/* ── Mobile-specific optimizations ── */
+@media screen and (max-width: 749px) {
+  /* Reduce paint complexity on mobile */
+  .product-card:hover::before {
+    display: none;
+  }
+
+  .product-card:hover {
+    transform: none;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  }
+
+  /* Simplify backdrop-filter on low-end devices */
+  .site-header {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgb(var(--color-base-background-1, 255, 255, 255));
+  }
+
+  /* Reduce animation complexity */
+  .product-overlay {
+    transition: none;
+  }
+
+  /* Optimize font rendering */
+  body {
+    text-rendering: optimizeSpeed;
+  }
+}
+
+/* ── Connection-aware image quality ── */
+/* Save-Data header support */
+@media (prefers-reduced-data: reduce) {
+  img {
+    image-rendering: pixelated;
+  }
+
+  .hero-image img {
+    filter: none;
+  }
+
+  .product-card:hover .product-card-image img {
+    transform: none;
+  }
+}
+
+/* ── Reduced motion: skip all animations for performance ── */
+@media (prefers-reduced-motion: reduce) {
+  img[data-lazy-src],
+  img[data-srcset] {
+    opacity: 1;
+    transition: none;
+  }
+}
+
+/* ── Print: hide non-essential elements ── */
+@media print {
+  .design-preview__zoom-hint,
+  .workflow-navigation {
+    display: none;
+  }
+}

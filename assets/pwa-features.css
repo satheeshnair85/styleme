@@ -1,0 +1,169 @@
+/* PWA Features Styles - Install Banner, Offline Indicator, Toast Notifications */
+
+/* ── Install Banner (Req 23.3) ── */
+
+#pwa-install-banner {
+  position: fixed;
+  bottom: -100px;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: rgb(var(--color-base-accent-1));
+  color: #fff;
+  padding: 12px 16px;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease;
+  transform: translateY(0);
+}
+
+#pwa-install-banner.pwa-install-visible {
+  transform: translateY(-100px);
+}
+
+.pwa-install-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 600px;
+  margin: 0 auto;
+  gap: 12px;
+}
+
+.pwa-install-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 1.4rem;
+  line-height: 1.4;
+}
+
+.pwa-install-text strong {
+  font-size: 1.5rem;
+}
+
+.pwa-install-text span {
+  opacity: 0.9;
+  font-size: 1.2rem;
+}
+
+.pwa-install-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.pwa-install-btn {
+  background: #fff;
+  color: rgb(var(--color-base-accent-1));
+  border: none;
+  padding: 8px 20px;
+  border-radius: var(--buttons-radius, 8px);
+  font-weight: 600;
+  font-size: 1.4rem;
+  cursor: pointer;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.pwa-install-dismiss {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 2.2rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  opacity: 0.8;
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pwa-install-dismiss:hover {
+  opacity: 1;
+}
+
+/* ── Offline Indicator (Req 23.9) ── */
+
+#pwa-offline-indicator {
+  position: fixed;
+  top: -50px;
+  left: 0;
+  right: 0;
+  z-index: 9998;
+  background: #f59e0b;
+  color: #78350f;
+  text-align: center;
+  padding: 8px 16px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: top 0.3s ease;
+}
+
+#pwa-offline-indicator.pwa-offline-visible {
+  top: 0;
+}
+
+.pwa-offline-icon {
+  font-size: 1.5rem;
+}
+
+.pwa-pending-badge {
+  background: #78350f;
+  color: #fef3c7;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  margin-left: 4px;
+}
+
+/* ── Toast Notifications (Req 23.9, 23.10) ── */
+
+.pwa-queued-toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  z-index: 10000;
+  background: #1f2937;
+  color: #f9fafb;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1.4rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  max-width: 90vw;
+  text-align: center;
+}
+
+.pwa-queued-toast.pwa-toast-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.pwa-sync-toast {
+  background: #065f46;
+}
+
+/* ── Responsive adjustments ── */
+
+@media screen and (min-width: 750px) {
+  #pwa-install-banner {
+    padding: 16px 24px;
+  }
+
+  .pwa-install-text {
+    font-size: 1.5rem;
+  }
+
+  .pwa-install-text span {
+    font-size: 1.3rem;
+  }
+}

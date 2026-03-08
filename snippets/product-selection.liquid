@@ -1,0 +1,263 @@
+{% comment %}
+  Product Selection Component (Step 3)
+  Displays Qikink product catalog with category filtering, variant selection,
+  pricing breakdown, size charts, and delivery estimates.
+  Requirements: 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 21.4, 21.5, 21.8
+{% endcomment %}
+
+<div class="product-selection" id="product-selection">
+  <!-- Category Filter Bar -->
+  <div class="product-selection__filters" role="tablist" aria-label="Product categories">
+    <button class="product-selection__filter product-selection__filter--active"
+            data-category="all" role="tab" aria-selected="true">
+      All Products
+    </button>
+  </div>
+
+  <!-- Product Grid -->
+  <div class="product-selection__grid" id="product-grid" role="list" aria-label="Product catalog">
+    <!-- Rendered by JS -->
+  </div>
+
+  <!-- Empty State -->
+  <div class="product-selection__empty" id="product-empty" hidden>
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+      <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+    </svg>
+    <p>No products available in this category.</p>
+  </div>
+
+  <!-- Variant Selection Panel (shown when a product card is clicked) -->
+  <div class="product-selection__variant-panel" id="variant-panel" hidden>
+    <div class="variant-panel__backdrop" id="variant-backdrop"></div>
+    <div class="variant-panel__content" role="dialog" aria-label="Select product options">
+      <button class="variant-panel__close" id="variant-close" aria-label="Close">&times;</button>
+
+      <div class="variant-panel__header">
+        <h3 class="variant-panel__name" id="vp-name"></h3>
+        <p class="variant-panel__material" id="vp-material"></p>
+      </div>
+
+      <!-- Color Swatches -->
+      <div class="variant-panel__section" id="vp-colors-section">
+        <h4 class="variant-panel__label">Color</h4>
+        <div class="variant-panel__swatches" id="vp-colors" role="radiogroup" aria-label="Color options"></div>
+      </div>
+
+      <!-- Size Buttons -->
+      <div class="variant-panel__section" id="vp-sizes-section">
+        <h4 class="variant-panel__label">
+          Size
+          <button class="variant-panel__size-chart-link" id="vp-size-chart-btn" type="button">Size Chart</button>
+        </h4>
+        <div class="variant-panel__sizes" id="vp-sizes" role="radiogroup" aria-label="Size options"></div>
+      </div>
+
+      <!-- Delivery Estimate -->
+      <div class="variant-panel__delivery">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+        </svg>
+        <span id="vp-delivery">Estimated delivery: 2-5 business days</span>
+      </div>
+
+      <!-- Price Breakdown -->
+      <div class="variant-panel__pricing" id="vp-pricing">
+        <div class="variant-panel__price-row">
+          <span>Base price</span><span id="vp-base-price"></span>
+        </div>
+        <div class="variant-panel__price-row">
+          <span>AI Design fee</span><span id="vp-design-fee"></span>
+        </div>
+        <div class="variant-panel__price-row variant-panel__price-row--total">
+          <span>Total</span><span id="vp-total-price"></span>
+        </div>
+      </div>
+
+      <!-- Out of Stock Notice -->
+      <p class="variant-panel__stock-notice" id="vp-stock-notice" hidden>
+        This variant is currently out of stock.
+      </p>
+
+      <!-- Select Button -->
+      <button class="btn btn-primary variant-panel__select-btn" id="vp-select-btn" disabled>
+        Select This Product
+      </button>
+    </div>
+  </div>
+
+  <!-- Size Chart Modal -->
+  <div class="product-selection__size-modal" id="size-chart-modal" hidden>
+    <div class="size-modal__backdrop" id="size-modal-backdrop"></div>
+    <div class="size-modal__content" role="dialog" aria-label="Size chart">
+      <button class="size-modal__close" id="size-modal-close" aria-label="Close">&times;</button>
+      <h3 class="size-modal__title">Size Chart</h3>
+      <div class="size-modal__table-wrap" id="size-chart-table"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* ── Product Selection ── */
+  .product-selection { max-width: 1200px; margin: 0 auto; padding: 1rem 0; }
+
+  /* ── Category Filters ── */
+  .product-selection__filters {
+    display: flex; gap: 0.5rem; overflow-x: auto; padding: 0 0 1rem;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .product-selection__filters::-webkit-scrollbar { display: none; }
+  .product-selection__filter {
+    flex-shrink: 0; padding: 0.625rem 1.25rem; border: 2px solid rgb(var(--color-base-text, 31,41,55), 0.15);
+    border-radius: 999px; background: transparent; font-size: 0.875rem; font-weight: 500;
+    color: rgb(var(--color-base-text, 31,41,55), 0.7); cursor: pointer; white-space: nowrap;
+    min-height: 44px; transition: all 0.2s;
+  }
+  .product-selection__filter:hover { border-color: rgb(var(--color-base-accent-1, 99,102,241)); color: rgb(var(--color-base-accent-1, 99,102,241)); }
+  .product-selection__filter--active {
+    background: rgb(var(--color-base-accent-1, 99,102,241)); color: #fff;
+    border-color: rgb(var(--color-base-accent-1, 99,102,241));
+  }
+
+  /* ── Product Grid ── */
+  .product-selection__grid {
+    display: grid; grid-template-columns: 1fr; gap: 1rem;
+  }
+  @media (min-width: 600px) { .product-selection__grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 960px) { .product-selection__grid { grid-template-columns: repeat(3, 1fr); } }
+
+  /* ── Product Card ── */
+  .product-card {
+    background: rgb(var(--color-base-background-1, 255,255,255));
+    border: 2px solid rgb(var(--color-base-text, 31,41,55), 0.08);
+    border-radius: 12px; overflow: hidden; cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  }
+  .product-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgb(0 0 0 / 0.1); border-color: rgb(var(--color-base-accent-1, 99,102,241)); }
+  .product-card:focus-visible { outline: 3px solid rgb(var(--color-base-accent-1, 99,102,241)); outline-offset: 2px; }
+  .product-card__image {
+    aspect-ratio: 4/3; background: rgb(var(--color-base-background-2, 249,250,251));
+    display: flex; align-items: center; justify-content: center; font-size: 3rem; color: rgb(var(--color-base-text, 31,41,55), 0.25);
+  }
+  .product-card__body { padding: 1rem; }
+  .product-card__name { font-size: 1.0625rem; font-weight: 600; margin: 0 0 0.25rem; color: rgb(var(--color-base-text, 31,41,55)); }
+  .product-card__material { font-size: 0.8125rem; color: rgb(var(--color-base-text, 31,41,55), 0.6); margin: 0 0 0.75rem; }
+  .product-card__pricing { display: flex; align-items: baseline; gap: 0.375rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+  .product-card__base-price { font-size: 0.8125rem; color: rgb(var(--color-base-text, 31,41,55), 0.5); }
+  .product-card__plus { font-size: 0.75rem; color: rgb(var(--color-base-text, 31,41,55), 0.4); }
+  .product-card__design-fee { font-size: 0.8125rem; color: rgb(var(--color-base-accent-1, 99,102,241)); }
+  .product-card__total { font-size: 1.125rem; font-weight: 700; color: rgb(var(--color-base-text, 31,41,55)); }
+  .product-card__delivery {
+    display: flex; align-items: center; gap: 0.375rem;
+    font-size: 0.75rem; color: rgb(var(--color-base-text, 31,41,55), 0.55);
+  }
+  .product-card__delivery svg { flex-shrink: 0; }
+
+  /* ── Empty State ── */
+  .product-selection__empty { text-align: center; padding: 4rem 2rem; color: rgb(var(--color-base-text, 31,41,55), 0.5); }
+
+  /* ── Variant Panel (slide-up on mobile, side panel on desktop) ── */
+  .product-selection__variant-panel { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: flex-end; justify-content: center; }
+  .variant-panel__backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
+  .variant-panel__content {
+    position: relative; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+    background: rgb(var(--color-base-background-1, 255,255,255));
+    border-radius: 16px 16px 0 0; padding: 1.5rem; animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @media (min-width: 750px) {
+    .product-selection__variant-panel { align-items: center; }
+    .variant-panel__content { border-radius: 16px; max-height: 80vh; }
+  }
+  .variant-panel__close {
+    position: absolute; top: 0.75rem; right: 0.75rem; background: none; border: none;
+    font-size: 1.75rem; line-height: 1; cursor: pointer; color: rgb(var(--color-base-text, 31,41,55), 0.5);
+    width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+  }
+  .variant-panel__header { margin-bottom: 1.25rem; }
+  .variant-panel__name { font-size: 1.25rem; font-weight: 700; margin: 0 0 0.25rem; }
+  .variant-panel__material { font-size: 0.8125rem; color: rgb(var(--color-base-text, 31,41,55), 0.6); margin: 0; }
+  .variant-panel__section { margin-bottom: 1.25rem; }
+  .variant-panel__label { font-size: 0.875rem; font-weight: 600; margin: 0 0 0.5rem; display: flex; align-items: center; gap: 0.75rem; }
+  .variant-panel__size-chart-link {
+    background: none; border: none; color: rgb(var(--color-base-accent-1, 99,102,241));
+    font-size: 0.8125rem; cursor: pointer; text-decoration: underline; padding: 0;
+  }
+
+  /* ── Color Swatches ── */
+  .variant-panel__swatches { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .color-swatch {
+    width: 36px; height: 36px; border-radius: 50%; border: 3px solid transparent;
+    cursor: pointer; position: relative; transition: border-color 0.15s;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12);
+  }
+  .color-swatch:hover { border-color: rgb(var(--color-base-text, 31,41,55), 0.3); }
+  .color-swatch--selected { border-color: rgb(var(--color-base-accent-1, 99,102,241)); box-shadow: 0 0 0 2px rgb(var(--color-base-accent-1, 99,102,241), 0.3); }
+  .color-swatch[aria-disabled="true"] { opacity: 0.3; cursor: not-allowed; }
+  .color-swatch__tooltip {
+    position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+    background: rgb(var(--color-base-text, 31,41,55)); color: #fff; font-size: 0.6875rem;
+    padding: 0.25rem 0.5rem; border-radius: 4px; white-space: nowrap; pointer-events: none;
+    opacity: 0; transition: opacity 0.15s;
+  }
+  .color-swatch:hover .color-swatch__tooltip,
+  .color-swatch:focus .color-swatch__tooltip { opacity: 1; }
+
+  /* ── Size Buttons ── */
+  .variant-panel__sizes { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .size-btn {
+    min-width: 48px; min-height: 44px; padding: 0.5rem 1rem; border: 2px solid rgb(var(--color-base-text, 31,41,55), 0.15);
+    border-radius: 8px; background: transparent; font-size: 0.875rem; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; color: rgb(var(--color-base-text, 31,41,55));
+  }
+  .size-btn:hover:not([aria-disabled="true"]) { border-color: rgb(var(--color-base-accent-1, 99,102,241)); color: rgb(var(--color-base-accent-1, 99,102,241)); }
+  .size-btn--selected { background: rgb(var(--color-base-accent-1, 99,102,241)); color: #fff; border-color: rgb(var(--color-base-accent-1, 99,102,241)); }
+  .size-btn[aria-disabled="true"] { opacity: 0.35; cursor: not-allowed; text-decoration: line-through; }
+
+  /* ── Delivery ── */
+  .variant-panel__delivery {
+    display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem;
+    color: rgb(var(--color-base-text, 31,41,55), 0.6); margin-bottom: 1rem;
+  }
+
+  /* ── Pricing ── */
+  .variant-panel__pricing {
+    background: rgb(var(--color-base-background-2, 249,250,251)); border-radius: 8px;
+    padding: 0.75rem 1rem; margin-bottom: 1rem;
+  }
+  .variant-panel__price-row { display: flex; justify-content: space-between; font-size: 0.875rem; padding: 0.25rem 0; color: rgb(var(--color-base-text, 31,41,55), 0.7); }
+  .variant-panel__price-row--total { font-weight: 700; font-size: 1.0625rem; border-top: 1px solid rgb(var(--color-base-text, 31,41,55), 0.1); padding-top: 0.5rem; margin-top: 0.25rem; color: rgb(var(--color-base-text, 31,41,55)); }
+
+  /* ── Stock Notice ── */
+  .variant-panel__stock-notice { color: #ef4444; font-size: 0.8125rem; text-align: center; margin-bottom: 0.75rem; }
+
+  /* ── Select Button ── */
+  .variant-panel__select-btn { width: 100%; min-height: 48px; font-size: 1rem; }
+
+  /* ── Size Chart Modal ── */
+  .product-selection__size-modal { position: fixed; inset: 0; z-index: 1100; display: flex; align-items: center; justify-content: center; }
+  .size-modal__backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.5); }
+  .size-modal__content {
+    position: relative; background: rgb(var(--color-base-background-1, 255,255,255));
+    border-radius: 12px; padding: 1.5rem; max-width: 420px; width: 90%; max-height: 80vh; overflow-y: auto;
+  }
+  .size-modal__close {
+    position: absolute; top: 0.5rem; right: 0.5rem; background: none; border: none;
+    font-size: 1.5rem; cursor: pointer; width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    color: rgb(var(--color-base-text, 31,41,55), 0.5);
+  }
+  .size-modal__title { font-size: 1.125rem; font-weight: 700; margin: 0 0 1rem; }
+  .size-chart-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  .size-chart-table th, .size-chart-table td {
+    padding: 0.5rem 0.75rem; text-align: center;
+    border-bottom: 1px solid rgb(var(--color-base-text, 31,41,55), 0.1);
+  }
+  .size-chart-table th { font-weight: 600; background: rgb(var(--color-base-background-2, 249,250,251)); }
+
+  /* ── Touch targets ── */
+  @media (pointer: coarse) {
+    .color-swatch { width: 44px; height: 44px; }
+    .size-btn { min-width: 52px; min-height: 48px; }
+  }
+</style>

@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Collection Cards Design</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            text-align: center;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 3rem;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .collections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .collection-card {
+            background: white;
+            border-radius: 20px;
+            padding: 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 3px solid transparent;
+            background-clip: padding-box;
+        }
+
+        .collection-card::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb, #f5576c);
+            border-radius: 23px;
+            z-index: -1;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background: linear-gradient(135deg, #667eea, #764ba2, #f093fb, #f5576c); }
+            50% { background: linear-gradient(135deg, #f093fb, #f5576c, #667eea, #764ba2); }
+        }
+
+        .collection-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.25);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1.5rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .collection-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .collection-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .discount-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+            z-index: 2;
+        }
+
+        .brand-logos {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-logo {
+            background: rgba(255,255,255,0.2);
+            padding: 0.3rem 0.8rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        .card-content {
+            padding: 2rem;
+        }
+
+        .mode-toggles {
+            display: flex;
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 0.25rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .mode-toggle {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .mode-toggle.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .mode-toggle:not(.active) {
+            color: #64748b;
+        }
+
+        .content-area {
+            min-height: 120px;
+            margin-bottom: 1.5rem;
+        }
+
+        .prompt-area {
+            display: block;
+        }
+
+        .image-area {
+            display: none;
+        }
+
+        .prompt-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.3s ease;
+            background: #fafbfc;
+        }
+
+        .prompt-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+        .upload-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafbfc;
+        }
+
+        .upload-zone:hover {
+            border-color: #667eea;
+            background: #f8faff;
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #94a3b8;
+        }
+
+        .char-counter {
+            text-align: right;
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .generate-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .generate-btn:hover::before {
+            left: 100%;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .collections-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+                margin-bottom: 2rem;
+            }
+            
+            .card-content {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Collection-specific themes */
+        .heritage-theme .card-header {
+            background: linear-gradient(135deg, #8B4513 0%, #D2691E 100%);
+        }
+
+        .global-theme .card-header {
+            background: linear-gradient(135deg, #DC143C 0%, #FF6347 100%);
+        }
+
+        .casual-theme .card-header {
+            background: linear-gradient(135deg, #4682B4 0%, #87CEEB 100%);
+        }
+
+        .bold-theme .card-header {
+            background: linear-gradient(135deg, #2F4F4F 0%, #708090 100%);
+        }
+
+        .traditional-theme .card-header {
+            background: linear-gradient(135deg, #8B008B 0%, #DA70D6 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="page-title">Enhanced Collection Design</h1>
+        
+        <div class="collections-grid">
+            <!-- Heritage Collection -->
+            <div class="collection-card heritage-theme">
+                <div class="card-header">
+                    <div class="discount-badge">MIN. 70% OFF</div>
+                    <h2 class="collection-title">HERITAGE</h2>
+                    <p class="collection-subtitle">Heritage Hues</p>
+                    <div class="brand-logos">
+                        <span class="brand-logo">Libas</span>
+                        <span class="brand-logo">Indo Era</span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="mode-toggles">
+                        <button class="mode-toggle active" onclick="switchMode(this, 'prompt')">
+                            ✨ PROMPT
+                        </button>
+                        <button class="mode-toggle" onclick="switchMode(this, 'image')">
+                            🖼️ IMAGE
+                        </button>
+                    </div>
+                    
+                    <div class="content-area">
+                        <div class="prompt-area">
+                            <textarea class="prompt-textarea" placeholder="Describe your heritage design idea... e.g., 'Traditional paisley pattern with golden accents'"></textarea>
+                            <div class="char-counter">0/500</div>
+                        </div>
+                        <div class="image-area">
+                            <div class="upload-zone">
+                                <div class="upload-icon">📁</div>
+                                <p>Drop your heritage inspiration image here</p>
+                                <small>or click to browse</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="generate-btn">Generate Heritage Design</button>
+                </div>
+            </div>
+
+            <!-- Global Collection -->
+            <div class="collection-card global-theme">
+                <div class="card-header">
+                    <div class="discount-badge">MIN. 55% OFF</div>
+                    <h2 class="collection-title">GLOBAL</h2>
+                    <p class="collection-subtitle">Global Faves</p>
+                    <div class="brand-logos">
+                        <span class="brand-logo">MANGO</span>
+                        <span class="brand-logo">trendyol</span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="mode-toggles">
+                        <button class="mode-toggle active" onclick="switchMode(this, 'prompt')">
+                            ✨ PROMPT
+                        </button>
+                        <button class="mode-toggle" onclick="switchMode(this, 'image')">
+                            🖼️ IMAGE
+                        </button>
+                    </div>
+                    
+                    <div class="content-area">
+                        <div class="prompt-area">
+                            <textarea class="prompt-textarea" placeholder="Describe your global fashion idea... e.g., 'Minimalist European style with clean lines'"></textarea>
+                            <div class="char-counter">0/500</div>
+                        </div>
+                        <div class="image-area">
+                            <div class="upload-zone">
+                                <div class="upload-icon">📁</div>
+                                <p>Drop your global fashion inspiration</p>
+                                <small>or click to browse</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="generate-btn">Generate Global Design</button>
+                </div>
+            </div>
+
+            <!-- Casual Collection -->
+            <div class="collection-card casual-theme">
+                <div class="card-header">
+                    <div class="discount-badge">MIN. 60% OFF</div>
+                    <h2 class="collection-title">CASUAL</h2>
+                    <p class="collection-subtitle">Casual Confidence</p>
+                    <div class="brand-logos">
+                        <span class="brand-logo">Levi's</span>
+                        <span class="brand-logo">Pepe Jeans</span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="mode-toggles">
+                        <button class="mode-toggle active" onclick="switchMode(this, 'prompt')">
+                            ✨ PROMPT
+                        </button>
+                        <button class="mode-toggle" onclick="switchMode(this, 'image')">
+                            🖼️ IMAGE
+                        </button>
+                    </div>
+                    
+                    <div class="content-area">
+                        <div class="prompt-area">
+                            <textarea class="prompt-textarea" placeholder="Describe your casual design... e.g., 'Relaxed streetwear with urban graphics'"></textarea>
+                            <div class="char-counter">0/500</div>
+                        </div>
+                        <div class="image-area">
+                            <div class="upload-zone">
+                                <div class="upload-icon">📁</div>
+                                <p>Drop your casual style inspiration</p>
+                                <small>or click to browse</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="generate-btn">Generate Casual Design</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchMode(button, mode) {
+            const card = button.closest('.collection-card');
+            const toggles = card.querySelectorAll('.mode-toggle');
+            const promptArea = card.querySelector('.prompt-area');
+            const imageArea = card.querySelector('.image-area');
+            
+            // Update toggle states
+            toggles.forEach(toggle => toggle.classList.remove('active'));
+            button.classList.add('active');
+            
+            // Show/hide content areas
+            if (mode === 'prompt') {
+                promptArea.style.display = 'block';
+                imageArea.style.display = 'none';
+            } else {
+                promptArea.style.display = 'none';
+                imageArea.style.display = 'block';
+            }
+        }
+
+        // Character counter functionality
+        document.querySelectorAll('.prompt-textarea').forEach(textarea => {
+            textarea.addEventListener('input', function() {
+                const counter = this.parentElement.querySelector('.char-counter');
+                const count = this.value.length;
+                counter.textContent = `${count}/500`;
+                
+                if (count > 450) {
+                    counter.style.color = '#ef4444';
+                } else if (count > 400) {
+                    counter.style.color = '#f59e0b';
+                } else {
+                    counter.style.color = '#64748b';
+                }
+            });
+        });
+
+        // Upload zone interactions
+        document.querySelectorAll('.upload-zone').forEach(zone => {
+            zone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.borderColor = '#667eea';
+                this.style.background = '#f0f4ff';
+            });
+            
+            zone.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.style.borderColor = '#cbd5e1';
+                this.style.background = '#fafbfc';
+            });
+            
+            zone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.borderColor = '#10b981';
+                this.style.background = '#f0fdf4';
+                this.innerHTML = '<div class="upload-icon">✅</div><p>Image uploaded successfully!</p>';
+            });
+        });
+
+        // Generate button interactions
+        document.querySelectorAll('.generate-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const originalText = this.textContent;
+                this.textContent = 'Generating...';
+                this.disabled = true;
+                
+                setTimeout(() => {
+                    this.textContent = originalText;
+                    this.disabled = false;
+                }, 2000);
+            });
+        });
+    </script>
+</body>
+</html>

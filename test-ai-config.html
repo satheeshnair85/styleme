@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Config Test</title>
+</head>
+<body>
+    <h1>AI Configuration Test</h1>
+    <div id="config-output"></div>
+    
+    <!-- Simulate the ai-config snippet -->
+    <script>
+      window.aiConfig = {
+        apiEndpoint: "https://letb0j7l89.execute-api.us-east-1.amazonaws.com/dev/generate-design",
+        apiKey: "sk-ai-merchandise-2024-secure-key-xyz789",
+        debugMode: true,
+        generationTimeout: 120000,
+        
+        log: function(message, data) {
+          if (this.debugMode) {
+            console.log('[AI Debug]', message, data || '');
+          }
+        },
+        
+        error: function(message, error) {
+          if (this.debugMode) {
+            console.error('[AI Error]', message, error || '');
+          }
+        }
+      };
+      
+      // Test the configuration
+      document.addEventListener('DOMContentLoaded', function() {
+        const output = document.getElementById('config-output');
+        output.innerHTML = `
+          <h2>Configuration Loaded:</h2>
+          <p><strong>API Endpoint:</strong> ${window.aiConfig.apiEndpoint}</p>
+          <p><strong>API Key:</strong> ${window.aiConfig.apiKey.substring(0, 10)}...</p>
+          <p><strong>Debug Mode:</strong> ${window.aiConfig.debugMode}</p>
+          <p><strong>Timeout:</strong> ${window.aiConfig.generationTimeout}ms</p>
+        `;
+        
+        // Test API call
+        window.aiConfig.log('Testing API configuration');
+        
+        // Test actual API call
+        const testPayload = {
+          prompt: "test design",
+          productType: "tshirt"
+        };
+        
+        fetch(window.aiConfig.apiEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Api-Key': window.aiConfig.apiKey
+          },
+          body: JSON.stringify(testPayload)
+        })
+        .then(response => response.json())
+        .then(data => {
+          window.aiConfig.log('API Test Response:', data);
+          output.innerHTML += `<h3>API Test Result:</h3><pre>${JSON.stringify(data, null, 2)}</pre>`;
+        })
+        .catch(error => {
+          window.aiConfig.error('API Test Failed:', error);
+          output.innerHTML += `<h3>API Test Error:</h3><p style="color: red;">${error.message}</p>`;
+        });
+      });
+    </script>
+</body>
+</html>

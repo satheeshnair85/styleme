@@ -1,0 +1,134 @@
+{% comment %}
+  Customer Order Detail Template
+  Displays order details with tracking status progression
+  Requirements: 13.3, 13.5, 13.7
+{% endcomment %}
+
+{{ 'order-tracking.css' | asset_url | stylesheet_tag }}
+
+<div class="customer-order">
+  <div class="customer-order__container">
+    <!-- Breadcrumb -->
+    <nav class="customer-order__breadcrumb" aria-label="Breadcrumb">
+      <a href="{{ routes.account_url }}">My Account</a>
+      <span aria-hidden="true">›</span>
+      <span>Order {{ order.name }}</span>
+    </nav>
+
+    <!-- Order Header -->
+    <div class="customer-order__header">
+      <div>
+        <h1 class="customer-order__title">Order {{ order.name }}</h1>
+        <p class="customer-order__date">
+          Placed on {{ order.created_at | date: "%B %d, %Y" }}
+        </p>
+      </div>
+      {% if order.cancelled %}
+        <span class="customer-order__cancelled-badge">Cancelled</span>
+      {% endif %}
+    </div>
+
+    {% unless order.cancelled %}
+      <!-- Tracking Status -->
+      <section class="customer-order__section" aria-label="Order tracking">
+        {% render 'order-tracking-status', order: order, compact: false %}
+      </section>
+    {% endunless %}
+
+    <!-- Line Items -->
+    <section class="customer-order__section" aria-label="Order items">
+      <h2 class="customer-order__section-title">Items</h2>
+      <div class="order-items">
+        {% for line_item in order.line_items %}
+          <div class="order-item">
+            <div class="order-item__image">
+              {% if line_item.image %}
+                <img src="{{ line_item.image | image_url: width: 120 }}" alt="{{ line_item.title }}" loading="lazy" width="120" height="120">
+              {% else %}
+                <div class="order-item__placeholder">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                </div>
+              {% endif %}
+            </div>
+            <div class="order-item__details">
+              <h3 class="order-item__title">{{ line_item.title }}</h3>
+              {% if line_item.variant_title != blank %}
+                <p class="order-item__variant">{{ line_item.variant_title }}</p>
+              {% endif %}
+              <p class="order-item__qty">Qty: {{ line_item.quantity }}</p>
+              {% comment %} Show design thumbnail from line item properties {% endcomment %}
+              {% for property in line_item.properties %}
+                {% if property.first == '_design_url' and property.last != blank %}
+                  <div class="order-item__design">
+                    <img src="{{ property.last }}" alt="Custom design" loading="lazy" width="60" height="60">
+                    <span class="order-item__design-label">Custom Design</span>
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+            <div class="order-item__price">
+              {{ line_item.final_line_price | money }}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- Order Summary -->
+    <section class="customer-order__section" aria-label="Order summary">
+      <h2 class="customer-order__section-title">Summary</h2>
+      <div class="order-summary">
+        <div class="order-summary__row">
+          <span>Subtotal</span>
+          <span>{{ order.line_items_subtotal_price | money }}</span>
+        </div>
+
+        {% for discount_application in order.discount_applications %}
+          <div class="order-summary__row order-summary__row--discount">
+            <span>Discount ({{ discount_application.title }})</span>
+            <span>-{{ discount_application.total_allocated_amount | money }}</span>
+          </div>
+        {% endfor %}
+
+        {% for shipping_method in order.shipping_methods %}
+          <div class="order-summary__row">
+            <span>Shipping ({{ shipping_method.title }})</span>
+            <span>{{ shipping_method.price | money }}</span>
+          </div>
+        {% endfor %}
+
+        {% if order.tax_lines.size > 0 %}
+          {% for tax_line in order.tax_lines %}
+            <div class="order-summary__row">
+              <span>Tax ({{ tax_line.title }} {{ tax_line.rate | times: 100 }}%)</span>
+              <span>{{ tax_line.price | money }}</span>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <div class="order-summary__row order-summary__row--total">
+          <span>Total</span>
+          <span>{{ order.total_price | money }} {{ order.currency }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Shipping Address -->
+    {% if order.shipping_address %}
+      <section class="customer-order__section" aria-label="Shipping address">
+        <h2 class="customer-order__section-title">Shipping Address</h2>
+        <address class="order-address">
+          {{ order.shipping_address | format_address }}
+        </address>
+      </section>
+    {% endif %}
+
+    <!-- Back Link -->
+    <div class="customer-order__footer">
+      <a href="{{ routes.account_url }}" class="btn btn-secondary btn-small">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Back to Account
+      </a>
+    </div>
+  </div>
+</div>

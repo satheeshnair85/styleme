@@ -1,0 +1,84 @@
+{% comment %}
+  Template for displaying Shopify pages (About, Contact, etc.)
+{% endcomment %}
+
+<div class="page-container">
+  <div class="page-content">
+    <header class="page-header">
+      <h1 class="page-title">{{ page.title }}</h1>
+    </header>
+    
+    <div class="page-body">
+      {{ page.content }}
+    </div>
+  </div>
+</div>
+
+<style>
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-xl) var(--spacing-md);
+}
+
+.page-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+}
+
+.page-title {
+  font-size: 2.5rem;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-md);
+}
+
+.page-body {
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: var(--color-text);
+}
+
+.page-body h2 {
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-md);
+  color: var(--color-primary);
+}
+
+.page-body h3 {
+  margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-sm);
+}
+
+.page-body p {
+  margin-bottom: var(--spacing-md);
+}
+
+.page-body ul, .page-body ol {
+  margin-bottom: var(--spacing-md);
+  padding-left: var(--spacing-lg);
+}
+
+.page-body li {
+  margin-bottom: var(--spacing-xs);
+}
+
+/* Mobile responsive */
+@media (max-width: 767px) {
+  .page-container {
+    padding: var(--spacing-lg) var(--spacing-sm);
+  }
+  
+  .page-title {
+    font-size: 2rem;
+  }
+  
+  .page-body {
+    font-size: 1rem;
+  }
+}
+</style>

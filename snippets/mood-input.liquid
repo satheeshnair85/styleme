@@ -1,0 +1,354 @@
+{% comment %}
+  Mood Input Component (Step 1)
+  Text prompt input with 3-500 character validation and character counter.
+  Image upload with drag-and-drop, file validation (PNG/JPEG/WebP <10MB),
+  preview, and mobile camera access.
+  Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 4.3, 4.4, 4.5, 22.9
+{% endcomment %}
+
+<div class="mood-input" id="mood-input">
+  <!-- Text Prompt Section -->
+  <div class="mood-input__section">
+    <label class="mood-input__label" for="mood-text">Describe your mood or creative vision</label>
+    <div class="mood-input__textarea-wrap">
+      <textarea
+        id="mood-text"
+        class="mood-input__textarea"
+        placeholder="e.g. A calm sunset over the ocean with warm orange and purple tones..."
+        minlength="3"
+        maxlength="500"
+        rows="4"
+        aria-describedby="mood-char-count mood-text-error"
+      ></textarea>
+      <div class="mood-input__counter" id="mood-char-count" aria-live="polite">
+        <span id="mood-char-current">0</span> / 500
+      </div>
+    </div>
+    <p class="mood-input__error" id="mood-text-error" role="alert" hidden></p>
+  </div>
+
+  <div class="mood-input__divider">
+    <span class="mood-input__divider-text">or</span>
+  </div>
+
+  <!-- Image Upload Section -->
+  <div class="mood-input__section">
+    <label class="mood-input__label">Upload an inspiration image</label>
+    <div
+      class="mood-input__dropzone"
+      id="mood-dropzone"
+      role="button"
+      tabindex="0"
+      aria-label="Drop an image here or click to browse. Accepts PNG, JPEG, WebP under 10MB."
+    >
+      <div class="mood-input__dropzone-content" id="dropzone-content">
+        <svg class="mood-input__upload-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <p class="mood-input__dropzone-text">Drag &amp; drop an image here</p>
+        <p class="mood-input__dropzone-hint">or click to browse &middot; PNG, JPEG, WebP &middot; Max 10MB</p>
+      </div>
+      <!-- Image preview (shown after upload) -->
+      <div class="mood-input__preview" id="mood-preview" hidden>
+        <img id="mood-preview-img" class="mood-input__preview-img" src="" alt="Uploaded image preview">
+        <button type="button" class="mood-input__remove-btn" id="mood-remove-img" aria-label="Remove uploaded image">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Hidden file inputs -->
+    <input
+      type="file"
+      id="mood-file-input"
+      class="mood-input__file-input"
+      accept="image/png,image/jpeg,image/webp"
+      aria-hidden="true"
+    >
+    <!-- Mobile camera input (Req 22.9) -->
+    <input
+      type="file"
+      id="mood-camera-input"
+      class="mood-input__file-input"
+      accept="image/png,image/jpeg,image/webp"
+      capture="environment"
+      aria-hidden="true"
+    >
+
+    <!-- Upload progress bar -->
+    <div class="mood-input__progress" id="mood-progress" hidden>
+      <div class="mood-input__progress-bar" id="mood-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+      <span class="mood-input__progress-text" id="mood-progress-text">Uploading...</span>
+    </div>
+
+    <p class="mood-input__error" id="mood-file-error" role="alert" hidden></p>
+
+    <!-- Mobile camera button (shown on touch devices) -->
+    <button type="button" class="mood-input__camera-btn" id="mood-camera-btn" aria-label="Take a photo with your camera">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+      </svg>
+      Take Photo
+    </button>
+  </div>
+</div>
+
+<style>
+  .mood-input {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .mood-input__section {
+    margin-bottom: 1rem;
+  }
+
+  .mood-input__label {
+    display: block;
+    font-size: 1rem;
+    font-weight: 600;
+    color: rgb(var(--color-base-text, 31, 41, 55));
+    margin-bottom: 0.5rem;
+  }
+
+  /* Textarea */
+  .mood-input__textarea-wrap {
+    position: relative;
+  }
+
+  .mood-input__textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 0.875rem;
+    padding-bottom: 2rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: rgb(var(--color-base-text, 31, 41, 55));
+    background: rgb(var(--color-base-background-1, 255, 255, 255));
+    border: 2px solid rgb(var(--color-base-text, 31, 41, 55), 0.2);
+    border-radius: var(--buttons-radius, 8px);
+    resize: vertical;
+    font-family: inherit;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+  }
+
+  .mood-input__textarea:focus {
+    outline: none;
+    border-color: rgb(var(--color-base-accent-1, 99, 102, 241));
+    box-shadow: 0 0 0 3px rgb(var(--color-base-accent-1, 99, 102, 241), 0.15);
+  }
+
+  .mood-input__textarea.mood-input__textarea--error {
+    border-color: #ef4444;
+  }
+
+  .mood-input__counter {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 0.75rem;
+    font-size: 0.8125rem;
+    color: rgb(var(--color-base-text, 31, 41, 55), 0.5);
+  }
+
+  .mood-input__counter--warn {
+    color: #f59e0b;
+  }
+
+  .mood-input__counter--over {
+    color: #ef4444;
+    font-weight: 600;
+  }
+
+  /* Error messages */
+  .mood-input__error {
+    font-size: 0.875rem;
+    color: #ef4444;
+    margin-top: 0.375rem;
+  }
+
+  /* Divider */
+  .mood-input__divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.25rem 0;
+  }
+
+  .mood-input__divider::before,
+  .mood-input__divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgb(var(--color-base-text, 31, 41, 55), 0.15);
+  }
+
+  .mood-input__divider-text {
+    font-size: 0.875rem;
+    color: rgb(var(--color-base-text, 31, 41, 55), 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Dropzone */
+  .mood-input__dropzone {
+    border: 2px dashed rgb(var(--color-base-text, 31, 41, 55), 0.2);
+    border-radius: var(--buttons-radius, 8px);
+    padding: 2rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background-color 0.2s;
+    position: relative;
+  }
+
+  .mood-input__dropzone:hover,
+  .mood-input__dropzone:focus-visible {
+    border-color: rgb(var(--color-base-accent-1, 99, 102, 241));
+    background: rgb(var(--color-base-accent-1, 99, 102, 241), 0.04);
+  }
+
+  .mood-input__dropzone.mood-input__dropzone--dragover {
+    border-color: rgb(var(--color-base-accent-1, 99, 102, 241));
+    background: rgb(var(--color-base-accent-1, 99, 102, 241), 0.08);
+  }
+
+  .mood-input__dropzone.mood-input__dropzone--has-preview {
+    padding: 0;
+    border-style: solid;
+  }
+
+  .mood-input__upload-icon {
+    color: rgb(var(--color-base-accent-1, 99, 102, 241));
+    margin-bottom: 0.5rem;
+  }
+
+  .mood-input__dropzone-text {
+    font-size: 1rem;
+    font-weight: 500;
+    color: rgb(var(--color-base-text, 31, 41, 55));
+    margin: 0 0 0.25rem;
+  }
+
+  .mood-input__dropzone-hint {
+    font-size: 0.8125rem;
+    color: rgb(var(--color-base-text, 31, 41, 55), 0.5);
+    margin: 0;
+  }
+
+  /* Preview */
+  .mood-input__preview {
+    position: relative;
+  }
+
+  .mood-input__preview-img {
+    display: block;
+    width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+    border-radius: calc(var(--buttons-radius, 8px) - 2px);
+  }
+
+  .mood-input__remove-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .mood-input__remove-btn:hover {
+    background: rgba(0, 0, 0, 0.8);
+  }
+
+  /* Hidden file input */
+  .mood-input__file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  /* Progress bar */
+  .mood-input__progress {
+    margin-top: 0.75rem;
+  }
+
+  .mood-input__progress-bar {
+    height: 4px;
+    background: rgb(var(--color-base-text, 31, 41, 55), 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .mood-input__progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--progress, 0%);
+    background: rgb(var(--color-base-accent-1, 99, 102, 241));
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  .mood-input__progress-text {
+    display: block;
+    font-size: 0.8125rem;
+    color: rgb(var(--color-base-text, 31, 41, 55), 0.6);
+    margin-top: 0.25rem;
+  }
+
+  /* Camera button — visible only on touch devices */
+  .mood-input__camera-btn {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: rgb(var(--color-base-accent-1, 99, 102, 241));
+    background: transparent;
+    border: 2px solid rgb(var(--color-base-accent-1, 99, 102, 241));
+    border-radius: var(--buttons-radius, 8px);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .mood-input__camera-btn:hover {
+    background: rgb(var(--color-base-accent-1, 99, 102, 241));
+    color: #fff;
+  }
+
+  @media (pointer: coarse) {
+    .mood-input__camera-btn {
+      display: inline-flex;
+    }
+  }
+
+  /* Mobile adjustments */
+  @media screen and (max-width: 749px) {
+    .mood-input__dropzone {
+      padding: 1.5rem 1rem;
+    }
+  }
+</style>

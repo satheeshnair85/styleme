@@ -1,0 +1,194 @@
+{% comment %}
+  Order Tracking Status Progression Component
+  Displays a visual status bar: Order Placed → Printing → Dispatched → Delivered
+  
+  Accepts:
+    - order: Shopify order object
+    - compact: boolean (optional) - use compact layout for order list
+  
+  Requirements: 13.3, 13.5, 13.7
+{% endcomment %}
+
+{% liquid
+  assign fulfillment_status_raw = ''
+  assign qikink_order_id = ''
+  assign tracking_number = ''
+  assign tracking_url = ''
+  assign carrier = ''
+
+  for metafield in order.metafields.custom
+    if metafield.key == 'fulfillment_status'
+      assign fulfillment_status_raw = metafield.value
+    endif
+    if metafield.key == 'qikink_order_id'
+      assign qikink_order_id = metafield.value
+    endif
+  endfor
+
+  assign current_status = 'placed'
+
+  if fulfillment_status_raw != blank
+    if fulfillment_status_raw contains '"status"'
+      if fulfillment_status_raw contains '"delivered"'
+        assign current_status = 'delivered'
+      elsif fulfillment_status_raw contains '"dispatched"'
+        assign current_status = 'dispatched'
+      elsif fulfillment_status_raw contains '"printing"'
+        assign current_status = 'printing'
+      elsif fulfillment_status_raw contains '"processing"'
+        assign current_status = 'processing'
+      endif
+    else
+      if fulfillment_status_raw == 'delivered'
+        assign current_status = 'delivered'
+      elsif fulfillment_status_raw == 'dispatched'
+        assign current_status = 'dispatched'
+      elsif fulfillment_status_raw == 'printing'
+        assign current_status = 'printing'
+      elsif fulfillment_status_raw == 'processing'
+        assign current_status = 'processing'
+      endif
+    endif
+  endif
+
+  if order.fulfillment_status == 'fulfilled'
+    assign current_status = 'delivered'
+  elsif order.fulfillment_status == 'partial'
+    if current_status == 'placed'
+      assign current_status = 'dispatched'
+    endif
+  endif
+
+  if order.fulfillments.size > 0
+    assign latest_fulfillment = order.fulfillments.last
+    assign tracking_number = latest_fulfillment.tracking_number
+    assign tracking_url = latest_fulfillment.tracking_url
+    assign carrier = latest_fulfillment.tracking_company
+  endif
+
+  case current_status
+    when 'placed'
+      assign step_number = 1
+    when 'processing'
+      assign step_number = 2
+    when 'printing'
+      assign step_number = 2
+    when 'dispatched'
+      assign step_number = 3
+    when 'delivered'
+      assign step_number = 4
+  endcase
+%}
+
+<div class="tracking-status {% if compact %}tracking-status--compact{% endif %}" data-order-id="{{ order.id }}" data-status="{{ current_status }}">
+  {% unless compact %}
+    <div class="tracking-status__header">
+      <h3 class="tracking-status__title">Order Status</h3>
+      <span class="tracking-status__badge tracking-status__badge--{{ current_status }}">
+        {{ current_status | capitalize }}
+      </span>
+    </div>
+  {% endunless %}
+
+  <!-- Status Progression Bar -->
+  <div class="tracking-progress" role="progressbar" aria-valuenow="{{ step_number }}" aria-valuemin="1" aria-valuemax="4" aria-label="Order progress: {{ current_status | capitalize }}">
+    <div class="tracking-progress__bar">
+      <div class="tracking-progress__fill" style="width: {% case step_number %}{% when 1 %}0%{% when 2 %}33%{% when 3 %}66%{% when 4 %}100%{% endcase %};"></div>
+    </div>
+
+    <div class="tracking-progress__steps">
+      <!-- Step 1: Order Placed -->
+      <div class="tracking-step {% if step_number >= 1 %}tracking-step--active{% endif %} {% if step_number > 1 %}tracking-step--completed{% endif %}">
+        <div class="tracking-step__icon">
+          {% if step_number > 1 %}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          {% else %}
+            <span>1</span>
+          {% endif %}
+        </div>
+        <span class="tracking-step__label">Placed</span>
+      </div>
+
+      <!-- Step 2: Printing -->
+      <div class="tracking-step {% if step_number >= 2 %}tracking-step--active{% endif %} {% if step_number > 2 %}tracking-step--completed{% endif %}">
+        <div class="tracking-step__icon">
+          {% if step_number > 2 %}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          {% elsif step_number == 2 %}
+            <div class="tracking-step__pulse"></div>
+          {% else %}
+            <span>2</span>
+          {% endif %}
+        </div>
+        <span class="tracking-step__label">Printing</span>
+      </div>
+
+      <!-- Step 3: Dispatched -->
+      <div class="tracking-step {% if step_number >= 3 %}tracking-step--active{% endif %} {% if step_number > 3 %}tracking-step--completed{% endif %}">
+        <div class="tracking-step__icon">
+          {% if step_number > 3 %}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          {% elsif step_number == 3 %}
+            <div class="tracking-step__pulse"></div>
+          {% else %}
+            <span>3</span>
+          {% endif %}
+        </div>
+        <span class="tracking-step__label">Dispatched</span>
+      </div>
+
+      <!-- Step 4: Delivered -->
+      <div class="tracking-step {% if step_number >= 4 %}tracking-step--active{% endif %}">
+        <div class="tracking-step__icon">
+          {% if step_number >= 4 %}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          {% else %}
+            <span>4</span>
+          {% endif %}
+        </div>
+        <span class="tracking-step__label">Delivered</span>
+      </div>
+    </div>
+  </div>
+
+  {% unless compact %}
+    <!-- Tracking Details -->
+    {% if tracking_number != blank %}
+      <div class="tracking-details">
+        <div class="tracking-details__row">
+          <span class="tracking-details__label">Tracking Number</span>
+          {% if tracking_url != blank %}
+            <a href="{{ tracking_url }}" target="_blank" rel="noopener noreferrer" class="tracking-details__value tracking-details__link">
+              {{ tracking_number }}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            </a>
+          {% else %}
+            <span class="tracking-details__value">{{ tracking_number }}</span>
+          {% endif %}
+        </div>
+
+        {% if carrier != blank %}
+          <div class="tracking-details__row">
+            <span class="tracking-details__label">Carrier</span>
+            <span class="tracking-details__value">{{ carrier }}</span>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <!-- Estimated Delivery -->
+    {% if current_status != 'delivered' and current_status != 'placed' %}
+      <div class="tracking-estimate">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span>Estimated delivery: 2-5 business days</span>
+      </div>
+    {% endif %}
+
+    {% if current_status == 'delivered' %}
+      <div class="tracking-delivered">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        <span>Your order has been delivered!</span>
+      </div>
+    {% endif %}
+  {% endunless %}
+</div>

@@ -1,0 +1,420 @@
+{% comment %}
+  Customization page template - handles the 4-step AI design workflow
+  This template will be enhanced in later tasks with the full workflow
+{% endcomment %}
+
+<div class="customization-page">
+  <div class="container">
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1 class="page-title">{{ page.title | default: "Customize Your Product" }}</h1>
+      <p class="page-description">Create unique designs with AI and apply them to your selected product</p>
+    </div>
+
+    <!-- Workflow Steps Indicator -->
+    <div class="workflow-steps">
+      <div class="step active" data-step="1">
+        <span class="step-number">1</span>
+        <span class="step-label">Mood Input</span>
+      </div>
+      <div class="step" data-step="2">
+        <span class="step-number">2</span>
+        <span class="step-label">Design Generation</span>
+      </div>
+      <div class="step" data-step="3">
+        <span class="step-number">3</span>
+        <span class="step-label">Product Selection</span>
+      </div>
+      <div class="step" data-step="4">
+        <span class="step-number">4</span>
+        <span class="step-label">Design Application</span>
+      </div>
+    </div>
+
+    <!-- Selected Product Display -->
+    <div class="selected-product" id="selected-product" style="display: none;">
+      <h2>Selected Product</h2>
+      <div class="product-info">
+        <div class="product-image">
+          <img id="selected-product-image" src="" alt="" loading="lazy" width="200" height="200" decoding="async">
+        </div>
+        <div class="product-details">
+          <h3 id="selected-product-name"></h3>
+          <p id="selected-product-type"></p>
+          <button type="button" class="btn btn-secondary btn-small" onclick="changeProduct()">
+            Change Product
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Customization Content -->
+    <div class="customization-content">
+      <!-- Step 1: Mood Input -->
+      <div class="workflow-step" data-step="1">
+        <h2>Step 1: Describe Your Mood</h2>
+        <p>Tell us about your mood or creative vision, and our AI will generate unique designs for you.</p>
+        {% render 'mood-input' %}
+      </div>
+
+      <!-- Step 2: Design Generation -->
+      <div class="workflow-step" data-step="2" style="display: none;">
+        {% render 'design-generation' %}
+      </div>
+
+      <!-- Step 3: Product Selection -->
+      <div class="workflow-step" data-step="3" style="display: none;">
+        <h2>Step 3: Select Your Product</h2>
+        <p>Choose which product you'd like to apply your design to.</p>
+        {% render 'product-selection' %}
+      </div>
+
+      <!-- Step 4: Design Application & Preview -->
+      <div class="workflow-step" data-step="4" style="display: none;">
+        {% render 'design-preview' %}
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="workflow-navigation">
+      <button type="button" class="btn btn-secondary" onclick="goBack()">
+        ← Back to Products
+      </button>
+      <button type="button" class="btn btn-primary" disabled>
+        Continue to Design Generation →
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Initialize customization page
+  document.addEventListener('DOMContentLoaded', function() {
+    initializeCustomizationPage();
+    initializeWorkflowNavigation();
+  });
+
+  function initializeCustomizationPage() {
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const productHandle = urlParams.get('product');
+    const productType = urlParams.get('type');
+    const sessionId = urlParams.get('session');
+
+    if (productHandle && productType) {
+      displaySelectedProduct(productHandle, productType);
+    } else {
+      // Try to get from session storage
+      const workflow = window.workflowState;
+      if (workflow && workflow.state.selectedProduct) {
+        const product = workflow.state.selectedProduct;
+        displaySelectedProduct(product.handle, product.type);
+      }
+    }
+
+    // Sync URL hash to current step
+    if (window.workflowState) {
+      window.workflowState.syncHashToStep();
+    }
+  }
+
+  function initializeWorkflowNavigation() {
+    const workflow = window.workflowState;
+    if (!workflow) return;
+
+    // Show current step
+    updateStepDisplay(workflow.getCurrentStep());
+
+    // Listen for step changes
+    document.addEventListener('workflow:stepchange', function(e) {
+      updateStepDisplay(e.detail.step);
+      updateNavigationButtons(e.detail.step);
+    });
+
+    // Initialize navigation buttons
+    updateNavigationButtons(workflow.getCurrentStep());
+  }
+
+  function updateStepDisplay(step) {
+    // Update step indicators
+    const stepIndicators = document.querySelectorAll('.workflow-steps .step');
+    stepIndicators.forEach(function(indicator, index) {
+      const stepNum = index + 1;
+      if (stepNum === step) {
+        indicator.classList.add('active');
+      } else {
+        indicator.classList.remove('active');
+      }
+    });
+
+    // Show/hide workflow step content
+    const stepContents = document.querySelectorAll('.workflow-step');
+    stepContents.forEach(function(content) {
+      const stepNum = parseInt(content.getAttribute('data-step'));
+      if (stepNum === step) {
+        content.style.display = 'block';
+      } else {
+        content.style.display = 'none';
+      }
+    });
+  }
+
+  function updateNavigationButtons(step) {
+    const workflow = window.workflowState;
+    if (!workflow) return;
+
+    const backBtn = document.querySelector('.workflow-navigation .btn-secondary');
+    const nextBtn = document.querySelector('.workflow-navigation .btn-primary');
+
+    if (!backBtn || !nextBtn) return;
+
+    // Update back button
+    if (step === 1) {
+      backBtn.textContent = '← Back to Products';
+      backBtn.onclick = goBack;
+    } else {
+      backBtn.textContent = '← Previous Step';
+      backBtn.onclick = function() {
+        workflow.goToStep(step - 1);
+      };
+    }
+
+    // Update next button
+    const canAdvance = workflow.canAdvance();
+    nextBtn.disabled = !canAdvance;
+
+    if (step === 1) {
+      nextBtn.textContent = 'Continue to Design Generation →';
+    } else if (step === 2) {
+      nextBtn.textContent = 'Continue to Product Selection →';
+    } else if (step === 3) {
+      nextBtn.textContent = 'Continue to Preview →';
+    } else if (step === 4) {
+      nextBtn.textContent = 'Add to Cart';
+    }
+
+    nextBtn.onclick = function() {
+      if (step === 4) {
+        // Handle add to cart
+        addToCart();
+      } else {
+        workflow.goToStep(step + 1);
+      }
+    };
+  }
+
+  function displaySelectedProduct(handle, type) {
+    const selectedProductDiv = document.getElementById('selected-product');
+    const productName = document.getElementById('selected-product-name');
+    const productType = document.getElementById('selected-product-type');
+    const productImage = document.getElementById('selected-product-image');
+
+    // Show selected product section
+    selectedProductDiv.style.display = 'block';
+
+    // Update product information
+    productName.textContent = formatProductName(type);
+    productType.textContent = `Product Type: ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+    
+    // Set placeholder image (will be replaced with actual product images later)
+    productImage.src = getPlaceholderImage(type);
+    productImage.alt = formatProductName(type);
+  }
+
+  function formatProductName(type) {
+    const names = {
+      'tshirt': 'T-Shirt',
+      'polo': 'Polo Shirt',
+      'mug': 'Mug',
+      'cap': 'Cap',
+      'sticker': 'Sticker Pack'
+    };
+    return names[type] || type.charAt(0).toUpperCase() + type.slice(1);
+  }
+
+  function getPlaceholderImage(type) {
+    // Return placeholder images for different product types
+    const placeholders = {
+      'tshirt': 'https://via.placeholder.com/200x200/6366f1/ffffff?text=T-Shirt',
+      'polo': 'https://via.placeholder.com/200x200/6366f1/ffffff?text=Polo',
+      'mug': 'https://via.placeholder.com/200x200/6366f1/ffffff?text=Mug',
+      'cap': 'https://via.placeholder.com/200x200/6366f1/ffffff?text=Cap',
+      'sticker': 'https://via.placeholder.com/200x200/6366f1/ffffff?text=Sticker'
+    };
+    return placeholders[type] || 'https://via.placeholder.com/200x200/6366f1/ffffff?text=Product';
+  }
+
+  function changeProduct() {
+    // Navigate back to product selection
+    window.location.href = '/#products';
+  }
+
+  function goBack() {
+    // Navigate back to home page
+    window.location.href = '/';
+  }
+
+  function addToCart() {
+    // Trigger the add-to-cart flow via the design preview's handler
+    var addBtn = document.getElementById('dp-add-to-cart');
+    if (addBtn) {
+      addBtn.click();
+    }
+  }
+</script>
+
+<style>
+  .customization-page {
+    padding: 2rem 0;
+    min-height: 60vh;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: rgb(var(--color-base-text, 31, 41, 55));
+  }
+
+  .page-description {
+    font-size: 1.125rem;
+    color: rgb(var(--color-base-text, 31, 41, 55), 0.8);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .workflow-steps {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 3rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: rgb(var(--color-base-background-2, 249, 250, 251));
+    border-radius: 8px;
+    color: rgb(var(--color-base-text, 31, 41, 55), 0.6);
+    font-size: 0.875rem;
+  }
+
+  .step.active {
+    background: rgb(var(--color-base-accent-1, 99, 102, 241));
+    color: white;
+  }
+
+  .step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: rgb(var(--color-base-text, 31, 41, 55), 0.2);
+    border-radius: 50%;
+    font-weight: 600;
+    font-size: 0.75rem;
+  }
+
+  .step.active .step-number {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .selected-product {
+    background: rgb(var(--color-base-background-1, 255, 255, 255));
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 3rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06);
+  }
+
+  .product-info {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  .product-image img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  .coming-soon {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: rgb(var(--color-base-background-2, 249, 250, 251));
+    border-radius: 12px;
+  }
+
+  .coming-soon-icon {
+    color: rgb(var(--color-base-accent-1, 99, 102, 241));
+    margin-bottom: 1rem;
+  }
+
+  .feature-preview {
+    margin-top: 2rem;
+    text-align: left;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .feature-preview ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .feature-preview li {
+    padding: 0.5rem 0;
+    position: relative;
+    padding-left: 1.5rem;
+  }
+
+  .feature-preview li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: rgb(var(--color-base-accent-1, 99, 102, 241));
+    font-weight: bold;
+  }
+
+  .workflow-navigation {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 3rem;
+    gap: 1rem;
+  }
+
+  @media screen and (max-width: 749px) {
+    .workflow-navigation {
+      flex-direction: column;
+    }
+    
+    .product-info {
+      flex-direction: column;
+      text-align: center;
+    }
+    
+    .workflow-steps {
+      gap: 0.5rem;
+    }
+    
+    .step {
+      padding: 0.5rem 0.75rem;
+    }
+    
+    .step-label {
+      display: none;
+    }
+  }
+</style>

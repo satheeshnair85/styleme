@@ -1,0 +1,374 @@
+/* ===================================
+   Base CSS - Core Styles
+   Mobile-First Responsive Design
+   =================================== */
+
+/* CSS Reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  line-height: 1.15;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+  font-size: var(--font-body-scale, 1rem);
+  line-height: 1.6;
+  color: rgb(var(--color-base-text, 31, 41, 55));
+  background-color: rgb(var(--color-base-background-1, 255, 255, 255));
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 1rem 0;
+  font-family: var(--font-heading-family, inherit);
+  font-weight: var(--font-heading-weight, 700);
+  line-height: 1.2;
+}
+
+p {
+  margin: 0 0 1rem 0;
+}
+
+/* Links */
+a {
+  color: rgb(var(--color-base-accent-1, 99, 102, 241));
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: rgb(var(--color-base-accent-2, 139, 92, 246));
+}
+
+/* Images */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Buttons */
+button {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+/* Form Elements */
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid rgb(var(--color-base-text, 31, 41, 55), 0.2);
+  border-radius: var(--inputs-radius, 4px);
+  background-color: rgb(var(--color-base-background-1, 255, 255, 255));
+  color: rgb(var(--color-base-text, 31, 41, 55));
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid rgb(var(--color-base-accent-1, 99, 102, 241));
+  outline-offset: 2px;
+  border-color: rgb(var(--color-base-accent-1, 99, 102, 241));
+}
+
+/* Lists */
+ul, ol {
+  margin: 0 0 1rem 0;
+  padding-left: 1.5rem;
+}
+
+li {
+  margin-bottom: 0.25rem;
+}
+
+/* Utility Classes */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.skip-to-content-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: rgb(var(--color-base-background-1, 255, 255, 255));
+  color: rgb(var(--color-base-text, 31, 41, 55));
+  text-decoration: none;
+  border-radius: 4px;
+  transition: top 0.3s;
+}
+
+.skip-to-content-link:focus {
+  top: 6px;
+}
+
+/* Container */
+.container {
+  width: 100%;
+  max-width: var(--page-width, 120rem);
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media screen and (min-width: 750px) {
+  .container {
+    padding: 0 2rem;
+  }
+}
+
+/* Grid System */
+.grid {
+  display: grid;
+  gap: var(--grid-mobile-horizontal-spacing, 1rem) var(--grid-mobile-vertical-spacing, 1rem);
+}
+
+@media screen and (min-width: 750px) {
+  .grid {
+    gap: var(--grid-desktop-horizontal-spacing, 2rem) var(--grid-desktop-vertical-spacing, 2rem);
+  }
+}
+
+.grid--1-col {
+  grid-template-columns: 1fr;
+}
+
+.grid--2-col {
+  grid-template-columns: 1fr;
+}
+
+@media screen and (min-width: 750px) {
+  .grid--2-col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.grid--3-col {
+  grid-template-columns: 1fr;
+}
+
+@media screen and (min-width: 750px) {
+  .grid--3-col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media screen and (min-width: 990px) {
+  .grid--3-col {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.grid--4-col {
+  grid-template-columns: 1fr;
+}
+
+@media screen and (min-width: 750px) {
+  .grid--4-col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media screen and (min-width: 990px) {
+  .grid--4-col {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Responsive Breakpoints */
+@media screen and (max-width: 749px) {
+  .small-hide {
+    display: none !important;
+  }
+}
+
+@media screen and (min-width: 750px) {
+  .medium-hide {
+    display: none !important;
+  }
+}
+
+@media screen and (min-width: 990px) {
+  .large-hide {
+    display: none !important;
+  }
+}
+
+/* Focus Management */
+.focus-none {
+  outline: none;
+}
+
+.focus-inset:focus-visible {
+  outline: 2px solid rgb(var(--color-base-accent-1, 99, 102, 241));
+  outline-offset: -2px;
+}
+
+/* Loading States */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid rgb(var(--color-base-accent-1, 99, 102, 241), 0.3);
+  border-top-color: rgb(var(--color-base-accent-1, 99, 102, 241));
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Button Styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  border: 2px solid transparent;
+  border-radius: var(--buttons-radius, 8px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 44px;
+  min-width: 44px;
+  font-family: inherit;
+}
+
+.btn:focus-visible {
+  outline: 3px solid rgb(var(--color-base-accent-1, 99, 102, 241));
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Primary Button */
+.btn-primary {
+  color: rgb(var(--color-base-solid-button-labels, 255, 255, 255));
+  background: rgb(var(--color-base-accent-1, 99, 102, 241));
+  border-color: rgb(var(--color-base-accent-1, 99, 102, 241));
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: rgb(var(--color-base-accent-2, 139, 92, 246));
+  border-color: rgb(var(--color-base-accent-2, 139, 92, 246));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgb(var(--color-base-accent-1, 99, 102, 241), 0.3);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Secondary Button */
+.btn-secondary {
+  color: rgb(var(--color-base-outline-button-labels, 99, 102, 241));
+  background: transparent;
+  border-color: rgb(var(--color-base-accent-1, 99, 102, 241));
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: rgb(var(--color-base-accent-1, 99, 102, 241), 0.1);
+  transform: translateY(-1px);
+}
+
+.btn-secondary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Button Sizes */
+.btn-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.btn-large {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+}
+
+/* Button with Icon */
+.btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Mobile Optimizations */
+@media screen and (max-width: 749px) {
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn-small {
+    width: auto;
+  }
+}
+
+/* Touch Device Optimizations */
+@media (pointer: coarse) {
+  .btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 1rem 1.75rem;
+  }
+}

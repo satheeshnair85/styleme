@@ -1,0 +1,30 @@
+{% comment %}
+  AI Configuration snippet - Makes theme settings available to JavaScript
+  Usage: {% render 'ai-config' %}
+{% endcomment %}
+
+<script>
+  window.aiConfig = {
+    apiEndpoint: {{ settings.ai_api_endpoint | json }},
+    apiKey: {{ settings.ai_api_key | json }},
+    debugMode: {{ settings.ai_debug_mode | json }},
+    generationTimeout: {{ settings.ai_generation_timeout | times: 1000 | json }}, // Convert to milliseconds
+    
+    // Helper methods
+    log: function(message, data) {
+      if (this.debugMode) {
+        console.log('[AI Debug]', message, data || '');
+      }
+    },
+    
+    error: function(message, error) {
+      if (this.debugMode) {
+        console.error('[AI Error]', message, error || '');
+      }
+    }
+  };
+  
+  {% comment %} Backward compatibility {% endcomment %}
+  window.API_BASE_URL = {{ settings.ai_api_endpoint | remove: '/generate-design' | json }};
+  window.GENERATION_TIMEOUT = {{ settings.ai_generation_timeout | times: 1000 | json }};
+</script>

@@ -1,0 +1,152 @@
+{% comment %}
+  AI Design Generator Section - Simple and intuitive for customers
+{% endcomment %}
+
+<section class="ai-design-section">
+  <div class="design-container">
+    <div class="design-header">
+      <h2 class="design-title">{{ section.settings.section_title | default: "Create Your Design with AI" }}</h2>
+      <p class="design-description">{{ section.settings.section_description | default: "Describe your mood or upload an image, and our AI will create a unique design for you" }}</p>
+    </div>
+
+    <div class="design-generator">
+      <!-- Step 1: Input Method Selection -->
+      <div class="input-method-selector">
+        <h3>How would you like to create your design?</h3>
+        <div class="method-buttons">
+          <button class="method-btn active" data-method="text">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14,2 14,8 20,8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10,9 9,9 8,9"></polyline>
+            </svg>
+            <span>Describe Your Mood</span>
+          </button>
+          <button class="method-btn" data-method="image">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21,15 16,10 5,21"></polyline>
+            </svg>
+            <span>Upload Image</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Text Input Method -->
+      <div class="input-section text-input-section active">
+        <div class="input-group">
+          <label for="mood-input">Describe your mood, style, or what you want to see:</label>
+          <textarea 
+            id="mood-input" 
+            placeholder="e.g., 'Happy summer vibes with palm trees and sunset colors' or 'Minimalist geometric patterns in blue and white'"
+            maxlength="500"
+            rows="4"
+          ></textarea>
+          <div class="character-count">
+            <span id="char-count">0</span>/500 characters
+          </div>
+        </div>
+        
+        <div class="style-suggestions">
+          <p>Need inspiration? Try these:</p>
+          <div class="suggestion-tags">
+            <button class="suggestion-tag" data-suggestion="Vintage retro sunset with palm trees">🌅 Retro Sunset</button>
+            <button class="suggestion-tag" data-suggestion="Minimalist geometric patterns in pastel colors">🔷 Geometric</button>
+            <button class="suggestion-tag" data-suggestion="Cute kawaii animals with rainbow colors">🌈 Kawaii</button>
+            <button class="suggestion-tag" data-suggestion="Abstract watercolor splash in vibrant colors">🎨 Abstract Art</button>
+            <button class="suggestion-tag" data-suggestion="Nature landscape with mountains and forest">🏔️ Nature</button>
+            <button class="suggestion-tag" data-suggestion="Space theme with stars and galaxies">🚀 Space</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Image Upload Method -->
+      <div class="input-section image-input-section">
+        <div class="upload-area" id="upload-area">
+          <div class="upload-content">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7,10 12,15 17,10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <p>Drag & drop your image here or <span class="upload-link">browse files</span></p>
+            <p class="upload-note">Supports PNG, JPG, WebP up to 10MB</p>
+          </div>
+          <input type="file" id="image-upload" accept="image/png,image/jpeg,image/webp" hidden>
+        </div>
+        
+        <div class="image-preview" id="image-preview" style="display: none;">
+          <img id="preview-img" src="" alt="Preview">
+          <button class="remove-image" id="remove-image">×</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Generate Button -->
+      <div class="generate-section">
+        <button class="btn btn-primary btn-large generate-btn" id="generate-design" disabled>
+          <span class="btn-text">Generate My Design</span>
+          <span class="btn-loading" style="display: none;">
+            <svg class="spinner" width="20" height="20" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416" stroke-dashoffset="31.416">
+                <animate attributeName="stroke-dasharray" dur="2s" values="0 31.416;15.708 15.708;0 31.416" repeatCount="indefinite"/>
+                <animate attributeName="stroke-dashoffset" dur="2s" values="0;-15.708;-31.416" repeatCount="indefinite"/>
+              </circle>
+            </svg>
+            Creating your design...
+          </span>
+        </button>
+        <p class="generate-note">This usually takes 10-30 seconds</p>
+      </div>
+
+      <!-- Step 4: Design Preview -->
+      <div class="design-preview" id="design-preview" style="display: none;">
+        <h3>Your AI-Generated Design</h3>
+        <div class="preview-container">
+          <img id="generated-design" src="" alt="Generated Design">
+          <div class="preview-actions">
+            <button class="btn btn-secondary regenerate-btn" id="regenerate-design">
+              🔄 Generate Another
+            </button>
+            <button class="btn btn-primary use-design-btn" id="use-design">
+              ✓ Use This Design
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Display -->
+      <div class="error-message" id="error-message" style="display: none;">
+        <p id="error-text"></p>
+        <button class="btn btn-secondary" id="retry-generation">Try Again</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "AI Design Generator",
+  "settings": [
+    {
+      "type": "text",
+      "id": "section_title",
+      "label": "Section Title",
+      "default": "Create Your Design with AI"
+    },
+    {
+      "type": "textarea",
+      "id": "section_description",
+      "label": "Section Description",
+      "default": "Describe your mood or upload an image, and our AI will create a unique design for you"
+    }
+  ],
+  "presets": [
+    {
+      "name": "AI Design Generator"
+    }
+  ]
+}
+{% endschema %}

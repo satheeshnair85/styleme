@@ -1,0 +1,149 @@
+{% comment %}
+  Workflow Navigation Controls
+  Back/Next buttons for the 4-step customization workflow.
+
+  Usage: {% render 'workflow-nav', current_step: 1 %}
+
+  Requirements: 8.6 (navigation controls), 8.7 (preserve selections going back),
+                8.9 (validate before advancing), 22.5 (44x44px touch targets)
+{% endcomment %}
+
+{% assign current = current_step | default: 1 %}
+{% assign step_labels = 'Mood Input,Design Generation,Product Selection,Design Application' | split: ',' %}
+
+<div class="workflow-nav" role="navigation" aria-label="Workflow navigation">
+  <!-- Validation error banner (hidden by default, shown by JS) -->
+  <div class="workflow-nav__error" id="workflow-nav-error" role="alert" aria-live="polite" hidden>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <span id="workflow-nav-error-text"></span>
+  </div>
+
+  <div class="workflow-nav__buttons">
+    <!-- Back button -->
+    <button
+      type="button"
+      class="btn btn-secondary workflow-nav__back"
+      id="workflow-back"
+      {% if current <= 1 %}disabled{% endif %}
+      aria-label="{% if current > 1 %}Go back to {{ step_labels[current | minus: 2] }}{% else %}Back{% endif %}"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      <span class="workflow-nav__btn-text">
+        {%- if current > 1 -%}
+          Back to {{ step_labels[current | minus: 2] }}
+        {%- else -%}
+          Back
+        {%- endif -%}
+      </span>
+      <span class="workflow-nav__btn-text-short">Back</span>
+    </button>
+
+    <!-- Step counter (mobile-friendly) -->
+    <span class="workflow-nav__counter" aria-hidden="true">
+      Step {{ current }} of 4
+    </span>
+
+    <!-- Next / Finish button -->
+    {%- if current < 4 -%}
+      <button
+        type="button"
+        class="btn btn-primary workflow-nav__next"
+        id="workflow-next"
+        aria-label="Continue to {{ step_labels[current] }}"
+      >
+        <span class="workflow-nav__btn-text">Continue to {{ step_labels[current] }}</span>
+        <span class="workflow-nav__btn-text-short">Next</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    {%- else -%}
+      <button
+        type="button"
+        class="btn btn-primary workflow-nav__next"
+        id="workflow-next"
+        aria-label="Add to cart"
+      >
+        <span>Add to Cart</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    {%- endif -%}
+  </div>
+</div>
+
+<style>
+  .workflow-nav {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgb(var(--color-base-text, 31, 41, 55), 0.1);
+  }
+
+  /* Error banner */
+  .workflow-nav__error {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    background: #fef2f2;
+    color: #b91c1c;
+    border-radius: var(--buttons-radius, 8px);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  .workflow-nav__error[hidden] {
+    display: none;
+  }
+  .workflow-nav__error svg {
+    flex-shrink: 0;
+  }
+
+  /* Button row */
+  .workflow-nav__buttons {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  /* Step counter (center) */
+  .workflow-nav__counter {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: rgb(var(--color-base-text, 31, 41, 55), 0.5);
+    white-space: nowrap;
+  }
+
+  /* Button text variants */
+  .workflow-nav__btn-text-short {
+    display: none;
+  }
+
+  /* Buttons inherit .btn styles from theme.css; just ensure touch targets */
+  .workflow-nav__back,
+  .workflow-nav__next {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .workflow-nav__back:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* ── Mobile ── */
+  @media screen and (max-width: 749px) {
+    .workflow-nav__buttons {
+      flex-wrap: nowrap;
+    }
+    .workflow-nav__btn-text {
+      display: none;
+    }
+    .workflow-nav__btn-text-short {
+      display: inline;
+    }
+  }
+</style>

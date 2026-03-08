@@ -1,0 +1,209 @@
+{% comment %}
+  Step Indicator Component
+  Displays the 4-step workflow progress with visual indicators.
+  
+  Usage: {% render 'step-indicator', current_step: 1 %}
+  
+  Requirements: 8.8 (step indicators showing current progress)
+{% endcomment %}
+
+{% assign current = current_step | default: 1 %}
+
+<nav class="step-indicator" aria-label="Customization progress">
+  <!-- Breadcrumb trail (Req 2.3) -->
+  <ol class="step-indicator__breadcrumbs" aria-label="Breadcrumb">
+    <li><a href="/">Home</a></li>
+    <li aria-current="page">Customize</li>
+  </ol>
+
+  <!-- Step progress bar -->
+  <div class="step-indicator__bar" role="progressbar" aria-valuenow="{{ current }}" aria-valuemin="1" aria-valuemax="4" aria-label="Step {{ current }} of 4">
+    <div class="step-indicator__track">
+      {% assign progress_pct = current | minus: 1 | times: 33.33 %}
+      <div class="step-indicator__fill" style="width: {{ progress_pct }}%"></div>
+    </div>
+  </div>
+
+  <!-- Step items -->
+  <ol class="step-indicator__steps">
+    {%- assign step_labels = 'Mood Input,Design Generation,Product Selection,Design Application' | split: ',' -%}
+    {%- assign step_icons = '✏️,🎨,🛍️,✅' | split: ',' -%}
+
+    {%- for label in step_labels -%}
+      {%- assign step_num = forloop.index -%}
+      {%- if step_num < current -%}
+        {%- assign step_class = 'step-indicator__step--completed' -%}
+        {%- assign aria_label = label | append: ' - completed' -%}
+      {%- elsif step_num == current -%}
+        {%- assign step_class = 'step-indicator__step--active' -%}
+        {%- assign aria_label = label | append: ' - current step' -%}
+      {%- else -%}
+        {%- assign step_class = '' -%}
+        {%- assign aria_label = label | append: ' - upcoming' -%}
+      {%- endif -%}
+
+      <li class="step-indicator__step {{ step_class }}" data-step="{{ step_num }}" aria-label="{{ aria_label }}">
+        <span class="step-indicator__number">
+          {%- if step_num < current -%}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          {%- else -%}
+            {{ step_num }}
+          {%- endif -%}
+        </span>
+        <span class="step-indicator__label">{{ label }}</span>
+        <span class="step-indicator__label-short">Step {{ step_num }}</span>
+      </li>
+    {%- endfor -%}
+  </ol>
+</nav>
+
+<style>
+  /* ── Step Indicator ── */
+  .step-indicator {
+    margin-bottom: 2rem;
+  }
+
+  /* Breadcrumbs (Req 2.3) */
+  .step-indicator__breadcrumbs {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+    font-size: 0.8125rem;
+    color: rgb(var(--color-base-text, 31, 41, 55), 0.6);
+    gap: 0.25rem;
+  }
+  .step-indicator__breadcrumbs li:not(:last-child)::after {
+    content: '/';
+    margin-left: 0.25rem;
+  }
+  .step-indicator__breadcrumbs a {
+    color: rgb(var(--color-base-accent-1, 99, 102, 241));
+    text-decoration: none;
+  }
+  .step-indicator__breadcrumbs a:hover {
+    text-decoration: underline;
+  }
+
+  /* Progress bar track */
+  .step-indicator__bar {
+    margin-bottom: 1.5rem;
+  }
+  .step-indicator__track {
+    height: 4px;
+    background: rgb(var(--color-base-text, 31, 41, 55), 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .step-indicator__fill {
+    height: 100%;
+    background: rgb(var(--color-base-accent-1, 99, 102, 241));
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  /* Steps list */
+  .step-indicator__steps {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    justify-content: space-between;
+    gap: 0.25rem;
+  }
+
+  /* Individual step */
+  .step-indicator__step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    text-align: center;
+    position: relative;
+  }
+
+  .step-indicator__number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 0.875rem;
+    font-weight: 600;
+    background: rgb(var(--color-base-text, 31, 41, 55), 0.08);
+    color: rgb(var(--color-base-text, 31, 41, 55), 0.5);
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+  }
+
+  .step-indicator__step--active .step-indicator__number {
+    background: rgb(var(--color-base-accent-1, 99, 102, 241));
+    color: #fff;
+    box-shadow: 0 0 0 4px rgb(var(--color-base-accent-1, 99, 102, 241), 0.2);
+  }
+
+  .step-indicator__step--completed .step-indicator__number {
+    background: rgb(var(--color-base-accent-1, 99, 102, 241));
+    color: #fff;
+  }
+
+  .step-indicator__label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: rgb(var(--color-base-text, 31, 41, 55), 0.5);
+    line-height: 1.3;
+  }
+  .step-indicator__step--active .step-indicator__label {
+    color: rgb(var(--color-base-text, 31, 41, 55));
+    font-weight: 600;
+  }
+  .step-indicator__step--completed .step-indicator__label {
+    color: rgb(var(--color-base-accent-1, 99, 102, 241));
+  }
+
+  /* Short label hidden on desktop, shown on mobile */
+  .step-indicator__label-short {
+    display: none;
+  }
+
+  /* ── Mobile (< 750px) ── */
+  @media screen and (max-width: 749px) {
+    .step-indicator__number {
+      width: 32px;
+      height: 32px;
+      font-size: 0.75rem;
+    }
+    .step-indicator__label {
+      display: none;
+    }
+    .step-indicator__label-short {
+      display: block;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: rgb(var(--color-base-text, 31, 41, 55), 0.5);
+    }
+    .step-indicator__step--active .step-indicator__label-short {
+      color: rgb(var(--color-base-text, 31, 41, 55));
+      font-weight: 600;
+    }
+    .step-indicator__step--completed .step-indicator__label-short {
+      color: rgb(var(--color-base-accent-1, 99, 102, 241));
+    }
+  }
+
+  /* ── Accessibility ── */
+  @media (prefers-reduced-motion: reduce) {
+    .step-indicator__fill,
+    .step-indicator__number {
+      transition: none;
+    }
+  }
+
+  @media (prefers-contrast: high) {
+    .step-indicator__step--active .step-indicator__number {
+      outline: 2px solid rgb(var(--color-base-accent-1, 99, 102, 241));
+    }
+  }
+</style>

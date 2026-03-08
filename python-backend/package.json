@@ -1,0 +1,19 @@
+{
+  "name": "ai-merchandise-backend-python",
+  "version": "1.0.0",
+  "description": "Python backend for AI-powered custom merchandise platform",
+  "scripts": {
+    "deploy": "serverless deploy",
+    "deploy-dev": "serverless deploy --stage dev",
+    "deploy-prod": "serverless deploy --stage prod",
+    "remove": "serverless remove",
+    "logs": "serverless logs -f generateDesign -t",
+    "invoke": "serverless invoke -f generateDesign",
+    "offline": "serverless offline"
+  },
+  "devDependencies": {
+    "serverless": "^3.38.0",
+    "serverless-python-requirements": "^6.0.0",
+    "serverless-offline": "^13.3.0"
+  }
+}

@@ -1,0 +1,54 @@
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# AWS
+.aws/
+aws-exports.js
+
+# Shopify
+.shopify/
+
+# Build outputs
+dist/
+build/
+*.zip
+
+# Logs
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+
+# Lambda deployment packages
+backend/node_modules/
+backend/.serverless/
+backend/dist/
+
+# Test coverage
+coverage/
+
+# Cache
+.cache/
+.parcel-cache/

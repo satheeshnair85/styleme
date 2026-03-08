@@ -1,0 +1,39 @@
+{
+  "sections": {
+    "collection_cards": {
+      "type": "collection-cards",
+      "blocks": {
+        "tshirts": {
+          "type": "collection_card",
+          "settings": {
+            "collection_title": "T-SHIRTS",
+            "collection_description": "Create custom designs with AI prompts",
+            "collection": "tshirts"
+          }
+        },
+        "hoodies": {
+          "type": "collection_card", 
+          "settings": {
+            "collection_title": "HOODIE",
+            "collection_description": "Create custom designs with AI prompts"
+          }
+        },
+        "accessories": {
+          "type": "collection_card",
+          "settings": {
+            "collection_title": "ACCESSORIES", 
+            "collection_description": "Create custom designs with AI prompts"
+          }
+        }
+      },
+      "block_order": [
+        "tshirts",
+        "hoodies", 
+        "accessories"
+      ]
+    }
+  },
+  "order": [
+    "collection_cards"
+  ]
+}

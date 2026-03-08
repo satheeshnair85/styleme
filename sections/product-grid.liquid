@@ -1,0 +1,299 @@
+{% comment %}
+  Product grid section for landing page - displays customizable merchandise with AI pricing
+{% endcomment %}
+
+<section class="product-grid-section">
+  <div class="section-container">
+    <div class="section-header">
+      <h2 class="section-title">{{ section.settings.section_title | default: "Choose Your Product" }}</h2>
+      <p class="section-description">{{ section.settings.section_description | default: "Select from our range of customizable merchandise and add your AI-generated design" }}</p>
+    </div>
+
+    <div class="product-grid">
+      {% if section.settings.collection != blank %}
+        {% assign collection = collections[section.settings.collection] %}
+        {% for product in collection.products limit: section.settings.products_to_show %}
+          <div class="product-card" 
+               data-product-type="{{ product.type | downcase }}" 
+               data-product-handle="{{ product.handle }}"
+               tabindex="0"
+               role="button"
+               aria-label="Customize {{ product.title }}"
+               onclick="selectProduct('{{ product.handle }}', '{{ product.type | downcase }}')"
+               onkeydown="if(event.key==='Enter'||event.key===' '){selectProduct('{{ product.handle }}', '{{ product.type | downcase }}');event.preventDefault();}">
+            {% if product.featured_image %}
+              <div class="product-card-image">
+                <img
+                  src="{{ product.featured_image | img_url: '400x' }}"
+                  srcset="
+                    {{ product.featured_image | img_url: '200x' }} 200w,
+                    {{ product.featured_image | img_url: '300x' }} 300w,
+                    {{ product.featured_image | img_url: '400x' }} 400w,
+                    {{ product.featured_image | img_url: '600x' }} 600w"
+                  sizes="(max-width: 749px) 100vw, (max-width: 989px) 50vw, 25vw"
+                  alt="{{ product.title }}"
+                  width="400"
+                  height="400"
+                  loading="lazy"
+                  decoding="async">
+                <div class="product-overlay">
+                  <span class="customize-text">Customize with AI</span>
+                </div>
+              </div>
+            {% endif %}
+            
+            <div class="product-card-content">
+              <h3 class="product-card-title">{{ product.title }}</h3>
+              <div class="product-card-pricing">
+                <div class="price-breakdown">
+                  <span class="base-price">Base: {{ product.price | money }}</span>
+                  <span class="ai-fee">+ AI Design: ${{ section.settings.ai_design_fee | default: "5.00" }}</span>
+                </div>
+                <div class="total-price">
+                  Total: {{ product.price | plus: section.settings.ai_design_fee_cents | default: 500 | money }}
+                </div>
+              </div>
+              <button class="btn btn-secondary btn-small customize-btn" type="button" aria-label="Start customizing {{ product.title }}">
+                Start Customizing
+              </button>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        {% comment %} Fallback to static products if no collection is selected {% endcomment %}
+        {% for block in section.blocks %}
+          <div class="product-card" 
+               data-product-type="{{ block.settings.product_type | default: 'tshirt' }}" 
+               data-product-handle="{{ block.settings.product_handle | default: block.settings.product_type }}"
+               tabindex="0"
+               role="button"
+               aria-label="Customize {{ block.settings.product_name }}"
+               onclick="selectProduct('{{ block.settings.product_handle | default: block.settings.product_type }}', '{{ block.settings.product_type | default: 'tshirt' }}')"
+               onkeydown="if(event.key==='Enter'||event.key===' '){selectProduct('{{ block.settings.product_handle | default: block.settings.product_type }}', '{{ block.settings.product_type | default: 'tshirt' }}');event.preventDefault();}"
+               {{ block.shopify_attributes }}>
+            {% if block.settings.product_image %}
+              <div class="product-card-image">
+                <img
+                  src="{{ block.settings.product_image | img_url: '400x' }}"
+                  srcset="
+                    {{ block.settings.product_image | img_url: '200x' }} 200w,
+                    {{ block.settings.product_image | img_url: '300x' }} 300w,
+                    {{ block.settings.product_image | img_url: '400x' }} 400w,
+                    {{ block.settings.product_image | img_url: '600x' }} 600w"
+                  sizes="(max-width: 749px) 100vw, (max-width: 989px) 50vw, 25vw"
+                  alt="{{ block.settings.product_name }}"
+                  width="400"
+                  height="400"
+                  loading="lazy"
+                  decoding="async">
+                <div class="product-overlay">
+                  <span class="customize-text">Customize with AI</span>
+                </div>
+              </div>
+            {% endif %}
+            
+            <div class="product-card-content">
+              <h3 class="product-card-title">{{ block.settings.product_name }}</h3>
+              <div class="product-card-pricing">
+                <div class="price-breakdown">
+                  <span class="base-price">Base: {{ block.settings.base_price | default: "$19.99" }}</span>
+                  <span class="ai-fee">+ AI Design: ${{ section.settings.ai_design_fee | default: "5.00" }}</span>
+                </div>
+                <div class="total-price">
+                  {% assign base_price_num = block.settings.base_price | remove: '$' | times: 100 %}
+                  {% assign ai_fee_num = section.settings.ai_design_fee | default: "5.00" | times: 100 %}
+                  {% assign total_price = base_price_num | plus: ai_fee_num %}
+                  Total: {{ total_price | money }}
+                </div>
+              </div>
+              <button class="btn btn-secondary btn-small customize-btn" type="button" aria-label="Start customizing {{ block.settings.product_name }}">
+                Start Customizing
+              </button>
+            </div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+
+    <!-- Additional Information -->
+    <div class="product-info">
+      <div class="info-grid">
+        <div class="info-item">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+          <div>
+            <h4>Fast AI Generation</h4>
+            <p>Get 3 unique designs in under 60 seconds</p>
+          </div>
+        </div>
+        <div class="info-item">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <div>
+            <h4>High Quality Printing</h4>
+            <p>300 DPI resolution for crisp, vibrant designs</p>
+          </div>
+        </div>
+        <div class="info-item">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6.28"/>
+          </svg>
+          <div>
+            <h4>Fast Delivery</h4>
+            <p>2-5 business days shipping within India</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Product Grid",
+  "settings": [
+    {
+      "type": "text",
+      "id": "section_title",
+      "label": "Section Title",
+      "default": "Choose Your Product"
+    },
+    {
+      "type": "textarea",
+      "id": "section_description",
+      "label": "Section Description",
+      "default": "Select from our range of customizable merchandise and add your AI-generated design"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection to Display",
+      "info": "Select a collection to show real products, or leave empty to use static blocks below"
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "label": "Number of Products to Show",
+      "min": 1,
+      "max": 12,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "text",
+      "id": "ai_design_fee",
+      "label": "AI Design Fee",
+      "default": "5.00",
+      "info": "Additional fee for AI design generation (in dollars)"
+    },
+    {
+      "type": "number",
+      "id": "ai_design_fee_cents",
+      "label": "AI Design Fee (cents)",
+      "default": 500,
+      "info": "AI design fee in cents for price calculations"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "product",
+      "name": "Static Product",
+      "settings": [
+        {
+          "type": "text",
+          "id": "product_name",
+          "label": "Product Name",
+          "default": "T-Shirt"
+        },
+        {
+          "type": "text",
+          "id": "base_price",
+          "label": "Base Price",
+          "default": "$19.99",
+          "info": "Product price before AI design fee"
+        },
+        {
+          "type": "select",
+          "id": "product_type",
+          "label": "Product Type",
+          "options": [
+            {
+              "value": "tshirt",
+              "label": "T-Shirt"
+            },
+            {
+              "value": "polo",
+              "label": "Polo Shirt"
+            },
+            {
+              "value": "mug",
+              "label": "Mug"
+            },
+            {
+              "value": "cap",
+              "label": "Cap"
+            },
+            {
+              "value": "sticker",
+              "label": "Sticker"
+            }
+          ],
+          "default": "tshirt"
+        },
+        {
+          "type": "image_picker",
+          "id": "product_image",
+          "label": "Product Image"
+        },
+        {
+          "type": "text",
+          "id": "product_handle",
+          "label": "Product Handle",
+          "info": "Shopify product handle for linking"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product Grid",
+      "blocks": [
+        {
+          "type": "product",
+          "settings": {
+            "product_name": "T-Shirt",
+            "base_price": "$19.99",
+            "product_type": "tshirt"
+          }
+        },
+        {
+          "type": "product",
+          "settings": {
+            "product_name": "Mug",
+            "base_price": "$14.99",
+            "product_type": "mug"
+          }
+        },
+        {
+          "type": "product",
+          "settings": {
+            "product_name": "Cap",
+            "base_price": "$22.99",
+            "product_type": "cap"
+          }
+        },
+        {
+          "type": "product",
+          "settings": {
+            "product_name": "Sticker Pack",
+            "base_price": "$9.99",
+            "product_type": "sticker"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

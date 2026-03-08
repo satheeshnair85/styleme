@@ -1,0 +1,209 @@
+<!doctype html>
+<html class="no-js" lang="{{ request.locale.iso_code }}">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#6366f1">
+    
+    <title>You're Offline - {{ shop.name }}</title>
+    
+    <style>
+      :root {
+        --color-primary: #6366f1;
+        --color-text: #1f2937;
+        --color-text-light: #6b7280;
+        --color-background: #ffffff;
+        --color-surface: #f9fafb;
+        --spacing-sm: 1rem;
+        --spacing-md: 1.5rem;
+        --spacing-lg: 2rem;
+        --spacing-xl: 3rem;
+        --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        --border-radius: 8px;
+      }
+      
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: var(--font-body);
+        color: var(--color-text);
+        background-color: var(--color-background);
+        line-height: 1.6;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--spacing-sm);
+      }
+      
+      .offline-container {
+        text-align: center;
+        max-width: 500px;
+        padding: var(--spacing-xl);
+        background-color: var(--color-surface);
+        border-radius: var(--border-radius);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+      
+      .offline-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto var(--spacing-md);
+        background-color: var(--color-primary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+      }
+      
+      .offline-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: var(--spacing-sm);
+        color: var(--color-text);
+      }
+      
+      .offline-description {
+        font-size: 1.125rem;
+        color: var(--color-text-light);
+        margin-bottom: var(--spacing-lg);
+      }
+      
+      .offline-actions {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        align-items: center;
+      }
+      
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        min-width: 200px;
+      }
+      
+      .btn-primary {
+        background-color: var(--color-primary);
+        color: white;
+      }
+      
+      .btn-primary:hover {
+        background-color: #5856eb;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+      }
+      
+      .btn-secondary {
+        background-color: transparent;
+        color: var(--color-primary);
+        border: 2px solid var(--color-primary);
+      }
+      
+      .btn-secondary:hover {
+        background-color: var(--color-primary);
+        color: white;
+      }
+      
+      .connection-status {
+        margin-top: var(--spacing-md);
+        padding: var(--spacing-sm);
+        border-radius: var(--border-radius);
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+      
+      .connection-status.offline {
+        background-color: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+      }
+      
+      .connection-status.online {
+        background-color: #f0fdf4;
+        color: #16a34a;
+        border: 1px solid #bbf7d0;
+      }
+      
+      @media (min-width: 768px) {
+        .offline-actions {
+          flex-direction: row;
+          justify-content: center;
+        }
+      }
+    </style>
+  </head>
+  
+  <body>
+    <div class="offline-container">
+      <div class="offline-icon">
+        📱
+      </div>
+      
+      <h1 class="offline-title">You're Offline</h1>
+      
+      <p class="offline-description">
+        It looks like you've lost your internet connection. Don't worry - you can still browse some cached content or try again when you're back online.
+      </p>
+      
+      <div class="offline-actions">
+        <button onclick="window.location.reload()" class="btn btn-primary">
+          Try Again
+        </button>
+        
+        <a href="/" class="btn btn-secondary">
+          Go Home
+        </a>
+      </div>
+      
+      <div id="connection-status" class="connection-status offline">
+        🔴 You're currently offline
+      </div>
+    </div>
+    
+    <script>
+      // Monitor connection status
+      function updateConnectionStatus() {
+        const statusElement = document.getElementById('connection-status');
+        
+        if (navigator.onLine) {
+          statusElement.textContent = '🟢 You\'re back online!';
+          statusElement.className = 'connection-status online';
+          
+          // Auto-reload after a short delay when back online
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        } else {
+          statusElement.textContent = '🔴 You\'re currently offline';
+          statusElement.className = 'connection-status offline';
+        }
+      }
+      
+      // Check connection status on load
+      updateConnectionStatus();
+      
+      // Listen for connection changes
+      window.addEventListener('online', updateConnectionStatus);
+      window.addEventListener('offline', updateConnectionStatus);
+      
+      // Check connection periodically
+      setInterval(updateConnectionStatus, 5000);
+    </script>
+  </body>
+</html>

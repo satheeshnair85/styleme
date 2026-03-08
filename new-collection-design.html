@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Collection Cards Design - Inspired by Reference Images</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 2rem 1rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            text-align: center;
+            color: #333;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+        }
+
+        .collections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 2rem;
+        }
+
+        /* Purple gradient border card inspired by second image */
+        .collection-card {
+            background: white;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        /* Purple gradient border outline */
+        .collection-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #8B5CF6, #A855F7, #C084FC, #DDD6FE);
+            border-radius: 20px;
+            padding: 3px;
+            z-index: -1;
+        }
+
+        .collection-card::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            right: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 17px;
+            z-index: -1;
+        }
+
+        .collection-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(139, 92, 246, 0.2);
+        }
+
+        /* Product image area inspired by first image */
+        .product-image-area {
+            height: 200px;
+            background: #f8f9fa;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            font-weight: 500;
+            text-align: center;
+            padding: 2rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        /* Remove collection name section - images speak for themselves */
+
+        /* Input section inspired by first image */
+        .input-section {
+            padding: 1.5rem;
+        }
+
+        .input-container {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .prompt-input {
+            width: 100%;
+            padding: 1rem 3.5rem 1rem 1.5rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            resize: none;
+            min-height: 56px;
+            transition: all 0.3s ease;
+            background: #fafbfc;
+            outline: none;
+        }
+
+        .prompt-input:focus {
+            border-color: #8B5CF6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+            background: white;
+        }
+
+        .prompt-input::placeholder {
+            color: #9ca3af;
+            font-weight: 400;
+        }
+
+        /* Camera, image, and send icons */
+        .input-actions {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .camera-btn {
+            background: #1f2937;
+            color: white;
+        }
+
+        .camera-btn:hover {
+            background: #374151;
+        }
+
+        .image-btn {
+            background: #06b6d4;
+            color: white;
+        }
+
+        .image-btn:hover {
+            background: #0891b2;
+        }
+
+        .send-btn {
+            background: #8B5CF6;
+            color: white;
+        }
+
+        .send-btn:hover {
+            background: #7C3AED;
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            background: #d1d5db;
+            color: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .char-counter {
+            text-align: right;
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+
+        /* File input hidden */
+        .file-input {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .collections-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .page-title {
+                font-size: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="page-title">New Collection Cards Design</h1>
+        
+        <div class="collections-grid">
+            <!-- T-Shirts Collection -->
+            <div class="collection-card">
+                <div class="product-image-area">
+                    A HIGH QUALITY PRODUCT IMAGE FILLS<br>
+                    THIS SPACE COMPLETELY
+                </div>
+                
+                <div class="input-section">
+                    <div class="input-container">
+                        <textarea 
+                            class="prompt-input" 
+                            placeholder="Ask anything"
+                            maxlength="500"></textarea>
+                        <div class="input-actions">
+                            <button class="action-btn camera-btn" onclick="takePhoto(this)" title="Take a picture with device camera">
+                                📷
+                            </button>
+                            <button class="action-btn image-btn" onclick="attachImage(this)" title="Attach an image from device">
+                                �️
+                            </button>
+                        </div>
+                        <input type="file" class="file-input" accept="image/*" onchange="handleImageUpload(this)">
+                    </div>
+                    <div class="char-counter">0/500</div>
+                    <button class="generate-btn" onclick="generateDesign(this)">
+                        Generate Design
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hoodies Collection -->
+            <div class="collection-card">
+                <div class="product-image-area">
+                    A HIGH QUALITY PRODUCT IMAGE FILLS<br>
+                    THIS SPACE COMPLETELY
+                </div>
+                
+                <div class="input-section">
+                    <div class="input-container">
+                        <textarea 
+                            class="prompt-input" 
+                            placeholder="Ask anything"
+                            maxlength="500"></textarea>
+                        <div class="input-actions">
+                            <button class="action-btn camera-btn" onclick="takePhoto(this)" title="Take a picture with device camera">
+                                📷
+                            </button>
+                            <button class="action-btn image-btn" onclick="attachImage(this)" title="Attach an image from device">
+                                🖼️
+                            </button>
+                        </div>
+                        <input type="file" class="file-input" accept="image/*" onchange="handleImageUpload(this)">
+                    </div>
+                    <div class="char-counter">0/500</div>
+                    <button class="generate-btn" onclick="generateDesign(this)">
+                        Generate Design
+                    </button>
+                </div>
+            </div>
+
+            <!-- Accessories Collection -->
+            <div class="collection-card">
+                <div class="product-image-area">
+                    A HIGH QUALITY PRODUCT IMAGE FILLS<br>
+                    THIS SPACE COMPLETELY
+                </div>
+                
+                <div class="input-section">
+                    <div class="input-container">
+                        <textarea 
+                            class="prompt-input" 
+                            placeholder="Ask anything"
+                            maxlength="500"></textarea>
+                        <div class="input-actions">
+                            <button class="action-btn camera-btn" onclick="takePhoto(this)" title="Take a picture with device camera">
+                                📷
+                            </button>
+                            <button class="action-btn image-btn" onclick="attachImage(this)" title="Attach an image from device">
+                                🖼️
+                            </button>
+                        </div>
+                        <input type="file" class="file-input" accept="image/*" onchange="handleImageUpload(this)">
+                    </div>
+                    <div class="char-counter">0/500</div>
+                    <button class="generate-btn" onclick="generateDesign(this)">
+                        Generate Design
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Character counter functionality
+        document.querySelectorAll('.prompt-input').forEach(textarea => {
+            textarea.addEventListener('input', function() {
+                const counter = this.parentElement.parentElement.querySelector('.char-counter');
+                const count = this.value.length;
+                counter.textContent = `${count}/500`;
+                
+                if (count > 450) {
+                    counter.style.color = '#ef4444';
+                } else if (count > 400) {
+                    counter.style.color = '#f59e0b';
+                } else {
+                    counter.style.color = '#6b7280';
+                }
+            });
+        });
+
+        // Take photo with camera
+        function takePhoto(button) {
+            const card = button.closest('.collection-card');
+            const fileInput = card.querySelector('.file-input');
+            
+            // Check if device supports camera
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                // For demo purposes, we'll just trigger file input with camera
+                fileInput.setAttribute('capture', 'camera');
+                fileInput.click();
+            } else {
+                alert('Camera not supported on this device');
+            }
+        }
+
+        // Attach image from device
+        function attachImage(button) {
+            const card = button.closest('.collection-card');
+            const fileInput = card.querySelector('.file-input');
+            fileInput.removeAttribute('capture');
+            fileInput.click();
+        }
+
+        // Handle image upload
+        function handleImageUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const card = input.closest('.collection-card');
+            const textarea = card.querySelector('.prompt-input');
+            
+            // Show file name in textarea
+            textarea.value = `Image uploaded: ${file.name}`;
+            textarea.style.background = '#f0fdf4';
+            textarea.style.borderColor = '#10b981';
+            
+            // Update character counter
+            const counter = card.querySelector('.char-counter');
+            counter.textContent = `Image: ${file.name}`;
+            counter.style.color = '#10b981';
+        }
+
+        // Generate design
+        function generateDesign(button) {
+            const card = button.closest('.collection-card');
+            const textarea = card.querySelector('.prompt-input');
+            const prompt = textarea.value.trim();
+            
+            if (!prompt) {
+                alert('Please enter a design prompt or upload an image');
+                return;
+            }
+            
+            const originalText = button.textContent;
+            button.textContent = 'Generating...';
+            button.disabled = true;
+            
+            // Simulate API call
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.disabled = false;
+                alert('Design generated successfully! (This is a demo)');
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

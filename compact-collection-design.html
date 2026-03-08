@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compact Collection Cards Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 2rem 1rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            text-align: center;
+            color: #333;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+        }
+
+        /* Compact horizontal grid layout */
+        .collections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+            max-width: 100%;
+            padding: 0 1rem;
+        }
+
+        /* Compact card with landscape orientation */
+        .collection-card {
+            background: white;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            height: 165px; /* Further reduced from 170px */
+            width: 100%; /* Responsive width instead of fixed */
+            max-width: 280px; /* Maximum width */
+            min-width: 260px; /* Minimum width */
+            justify-self: center;
+        }
+
+        /* Orange gradient border (matching your reference) */
+        .collection-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #ff6b35, #f7931e, #ffb347, #ffd700);
+            border-radius: 12px;
+            padding: 2px;
+            z-index: -1;
+        }
+
+        .collection-card::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            bottom: 2px;
+            background: white;
+            border-radius: 10px;
+            z-index: -1;
+        }
+
+        .collection-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 107, 53, 0.15);
+        }
+
+        /* Compact landscape image area */
+        .product-image-area {
+            height: 120px; /* Landscape height */
+            width: 100%;
+            background: #f8f9fa;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .product-hero-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Changed from cover to contain to show full image */
+            object-position: center;
+        }
+
+        .product-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+            color: #6b7280;
+        }
+
+        .placeholder-text {
+            font-weight: 600;
+            font-size: 0.8rem; /* Reduced font size */
+            text-align: center;
+            padding: 0.5rem; /* Reduced padding */
+        }
+
+        /* Price overlay (like your reference) */
+        .price-overlay {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Compact input section */
+        .input-section {
+            padding: 0.4rem 0.6rem 0.6rem 0.6rem; /* Further reduced padding */
+            height: 45px; /* Further reduced from 50px */
+            display: flex;
+            align-items: center;
+        }
+
+        .input-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .prompt-input {
+            width: 100%;
+            padding: 0.3rem 2.3rem 0.3rem 0.7rem; /* Further reduced padding */
+            border: 1.5px solid #e5e7eb;
+            border-radius: 18px; /* Further reduced from 20px */
+            font-size: 0.7rem; /* Further reduced font size */
+            font-family: inherit;
+            resize: none;
+            height: 26px; /* Further reduced from 30px */
+            transition: all 0.3s ease;
+            background: #fafbfc;
+            outline: none;
+            overflow: hidden;
+        }
+
+        .prompt-input:focus {
+            border-color: #ff6b35;
+            box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.1);
+            background: white;
+        }
+
+        .prompt-input::placeholder {
+            color: #9ca3af;
+            font-weight: 400;
+        }
+
+        /* Compact action buttons */
+        .input-actions {
+            position: absolute;
+            right: 0.3rem; /* Further reduced */
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 0.15rem; /* Further reduced gap */
+        }
+
+        .action-btn {
+            width: 18px; /* Further reduced from 20px */
+            height: 18px; /* Further reduced from 20px */
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem; /* Further reduced font size */
+            transition: all 0.2s ease;
+        }
+
+        .image-btn {
+            background: #06b6d4;
+            color: white;
+        }
+
+        .image-btn:hover {
+            background: #0891b2;
+        }
+
+        .send-btn {
+            background: #ff6b35;
+            color: white;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: #e55a2b;
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            background: #d1d5db;
+            color: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* File inputs hidden */
+        .file-input,
+        .camera-input {
+            display: none;
+        }
+
+        /* Modal (same as before but smaller) */
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            max-width: 280px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .image-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .image-option {
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .image-option:hover {
+            border-color: #ff6b35;
+            background: #fff8f5;
+        }
+
+        .option-icon {
+            font-size: 1.2rem;
+        }
+
+        .option-text {
+            text-align: left;
+        }
+
+        .option-title {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+
+        .option-desc {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .modal-close {
+            margin-top: 1rem;
+            padding: 0.4rem 0.8rem;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #6b7280;
+            font-size: 0.8rem;
+        }
+
+        /* Responsive - show more cards on larger screens */
+        @media (min-width: 768px) {
+            .collections-grid {
+                grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .collections-grid {
+                grid-template-columns: repeat(4, 1fr);
+                max-width: 1200px;
+            }
+        }
+
+        @media (min-width: 1400px) {
+            .collections-grid {
+                grid-template-columns: repeat(5, 1fr);
+                max-width: 1400px;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .collections-grid {
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                gap: 0.75rem;
+                padding: 0 0.5rem;
+            }
+            
+            .collection-card {
+                min-width: 240px;
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .collections-grid {
+                grid-template-columns: 1fr;
+                padding: 0;
+            }
+            
+            .collection-card {
+                width: 100%;
+                max-width: 100%;
+                min-width: auto;
+            }
+            
+            .input-actions {
+                right: 0.25rem; /* Further reduced for mobile */
+            }
+            
+            .action-btn {
+                width: 16px; /* Even smaller on mobile */
+                height: 16px;
+                font-size: 0.6rem;
+            }
+            
+            .prompt-input {
+                height: 24px; /* Smaller on mobile */
+                font-size: 0.65rem;
+                padding: 0.25rem 2rem 0.25rem 0.6rem;
+                border-radius: 16px;
+            }
+            
+            .input-section {
+                height: 40px; /* Smaller on mobile */
+                padding: 0.3rem 0.5rem 0.5rem 0.5rem;
+            }
+        }
+
+        /* Demo info */
+        .demo-info {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: #e0f2fe;
+            border-radius: 8px;
+            color: #0369a1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="page-title">Compact Collection Cards Preview</h1>
+        
+        <div class="demo-info">
+            <strong>Compact Design:</strong> 280px × 180px cards • Landscape orientation • 4-5 cards per row • Minimal input area
+        </div>
+        
+        <div class="collections-grid">
+            <!-- Shoes Collection -->
+            <div class="collection-card" data-collection="shoes">
+                <div class="product-image-area">
+                    <div class="product-placeholder">
+                        <div class="placeholder-text">CASUAL SHOES</div>
+                    </div>
+                    <div class="price-overlay">UNDER ₹799-899</div>
+                </div>
+                
+                <div class="input-section">
+                    <div class="input-container">
+                        <input 
+                            type="text" 
+                            class="prompt-input" 
+                            placeholder="Ask anything"
+                            maxlength="500">
+                        <div class="input-actions">
+                            <button class="action-btn image-btn" onclick="showImageOptions(this)" title="Add image">
+                                🖼️
+                            </button>
+                            <button class="action-btn send-btn" onclick="generateDesign(this)" title="Send">
+                                ➤
+                            </button>
+                        </div>
+                        <input type="file" class="file-input" accept="image/*" onchange="handleImageUpload(this)">
+                        <input type="file" class="camera-input" accept="image/*" capture="camera" onchange="handleImageUpload(this)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deodorants Collection -->
+            <div class="collection-card" data-collection="deodorants">
+                <div class="product-image-area">
+                    <div class="product-placeholder">
+                        <div class="placeholder-text">DEODORANTS</div>
+                    </div>
+                    <div class="price-overlay">UNDER ₹549-199</div>
+                </div>
+                
+                <div class="input-section">
+                    <div class="input-container">
+                        <input 
+                            type="text" 
+                            class="prompt-input" 
+                            placeholder="Ask anything"
+                            maxlength="500">
+                        <div class="input-actions">
+                            <button class="action-btn image-btn" onclick="showImageOptions(this)" title="Add image">
+                                🖼️
+                            </button>
+                            <button class="action-btn send-btn" onclick="generateDesign(this)" title="Send">
+                                ➤
+                            </button>
+                        </div>
+                        <input type="file" class="file-input" accept="image/*" onchange="handleImageUpload(this)">
+                        <input type="file" class="camera-input" accept="image/*" capture="camera" onchange="handleImageUpload(this)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flip Flops Collection -->
+            <div class="collection-card" data-collection="flipflops">
+                <div class="product-image-area">
+                    <div class="product-placeholder">
+                        <div class="placeholder-text">BREEZY FLIP FLOPS</div>
+                    </div>
+                    <div class="price-overlay">UNDER ₹1399-499</div>
+                </div>
+                
+                <div class="input-section">
+                    <div class="input-container">
+                        <input 
+                            type="text" 
+                            class="prompt-input" 
+                            placeholder="Ask anything"
+                            maxlength="500">
+                        <div class="input-actions">
+                            <button class="action-btn image-btn" onclick="showImageOptions(this)" title="Add image">
+                                🖼️
+                            </button>
+                            <button class="action-btn send-btn" onclick="generateDesign(this)" title="Send">
+                                ➤
+                            </button>
+                        </div>
+                        <input type="file" class="file-input" accept="image/*" onchange="handleImageUpload(this)">
+                        <input type="file" class="camera-input" accept="image/*" capture="camera" onchange="handleImageUpload(this)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formal Shoes Collection -->
+            <div class="collection-card" data-collection="formal">
+                <div class="product-image-area">
+                    <div class="product-placeholder">
+                        <div class="placeholder-text">SHARP FORMAL SHOES</div>
+                    </div>
+                    <div class="price-overlay">UNDER ₹2799-899</div>
+                </div>
+                
+                <div class="input-section">
+                    <div class="input-container">
+                        <input 
+                            type="text" 
+                            class="prompt-input" 
+                            placeholder="Ask anything"
+                            maxlength="500">
+                        <div class="input-actions">
+                            <button class="action-btn image-btn" onclick="showImageOptions(this)" title="Add image">
+                                🖼️
+                            </button>
+                            <button class="action-btn send-btn" onclick="generateDesign(this)" title="Send">
+                                ➤
+                            </button>
+                        </div>
+                        <input type="file" class="file-input" accept="image/*" onchange="handleImageUpload(this)">
+                        <input type="file" class="camera-input" accept="image/*" capture="camera" onchange="handleImageUpload(this)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jeans Collection -->
+            <div class="collection-card" data-collection="jeans">
+                <div class="product-image-area">
+                    <div class="product-placeholder">
+                        <div class="placeholder-text">TRENDY JEANS</div>
+                    </div>
+                    <div class="price-overlay">UNDER ₹1799-649</div>
+                </div>
+                
+                <div class="input-section">
+                    <div class="input-container">
+                        <input 
+                            type="text" 
+                            class="prompt-input" 
+                            placeholder="Ask anything"
+                            maxlength="500">
+                        <div class="input-actions">
+                            <button class="action-btn image-btn" onclick="showImageOptions(this)" title="Add image">
+                                🖼️
+                            </button>
+                            <button class="action-btn send-btn" onclick="generateDesign(this)" title="Send">
+                                ➤
+                            </button>
+                        </div>
+                        <input type="file" class="file-input" accept="image/*" onchange="handleImageUpload(this)">
+                        <input type="file" class="camera-input" accept="image/*" capture="camera" onchange="handleImageUpload(this)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Perfumes Collection -->
+            <div class="collection-card" data-collection="perfumes">
+                <div class="product-image-area">
+                    <div class="product-placeholder">
+                        <div class="placeholder-text">ENTICING PERFUMES</div>
+                    </div>
+                    <div class="price-overlay">UNDER ₹1249-449</div>
+                </div>
+                
+                <div class="input-section">
+                    <div class="input-container">
+                        <input 
+                            type="text" 
+                            class="prompt-input" 
+                            placeholder="Ask anything"
+                            maxlength="500">
+                        <div class="input-actions">
+                            <button class="action-btn image-btn" onclick="showImageOptions(this)" title="Add image">
+                                🖼️
+                            </button>
+                            <button class="action-btn send-btn" onclick="generateDesign(this)" title="Send">
+                                ➤
+                            </button>
+                        </div>
+                        <input type="file" class="file-input" accept="image/*" onchange="handleImageUpload(this)">
+                        <input type="file" class="camera-input" accept="image/*" capture="camera" onchange="handleImageUpload(this)">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Source Selection Modal -->
+        <div class="image-modal" id="imageModal">
+            <div class="modal-content">
+                <h3 class="modal-title">Choose Image Source</h3>
+                <div class="image-options">
+                    <div class="image-option" onclick="selectGallery()">
+                        <div class="option-icon">📱</div>
+                        <div class="option-text">
+                            <div class="option-title">Gallery</div>
+                            <div class="option-desc">Choose from photos</div>
+                        </div>
+                    </div>
+                    <div class="image-option" onclick="selectCamera()">
+                        <div class="option-icon">📷</div>
+                        <div class="option-text">
+                            <div class="option-title">Camera</div>
+                            <div class="option-desc">Take new photo</div>
+                        </div>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeImageModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentCard = null;
+
+        // Input functionality
+        document.querySelectorAll('.prompt-input').forEach(input => {
+            input.addEventListener('input', function() {
+                const sendBtn = this.parentElement.querySelector('.send-btn');
+                sendBtn.disabled = this.value.trim().length === 0;
+            });
+        });
+
+        // Modal functions
+        function showImageOptions(button) {
+            currentCard = button.closest('.collection-card');
+            document.getElementById('imageModal').classList.add('show');
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.remove('show');
+            currentCard = null;
+        }
+
+        function selectGallery() {
+            if (currentCard) {
+                currentCard.querySelector('.file-input').click();
+            }
+            closeImageModal();
+        }
+
+        function selectCamera() {
+            if (currentCard) {
+                currentCard.querySelector('.camera-input').click();
+            }
+            closeImageModal();
+        }
+
+        function handleImageUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const card = input.closest('.collection-card');
+            const promptInput = card.querySelector('.prompt-input');
+            const sendBtn = card.querySelector('.send-btn');
+            
+            const source = input.hasAttribute('capture') ? 'Camera' : 'Gallery';
+            promptInput.value = `${source}: ${file.name}`;
+            promptInput.style.background = '#f0fdf4';
+            promptInput.style.borderColor = '#10b981';
+            sendBtn.disabled = false;
+        }
+
+        function generateDesign(button) {
+            const card = button.closest('.collection-card');
+            const input = card.querySelector('.prompt-input');
+            const prompt = input.value.trim();
+            
+            if (!prompt) {
+                alert('Please enter a message or upload an image');
+                return;
+            }
+            
+            button.innerHTML = '⏳';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                button.innerHTML = '➤';
+                button.disabled = false;
+                alert(`Design generated! (Demo)\nPrompt: "${prompt}"`);
+                input.value = '';
+                input.style.background = '#fafbfc';
+                input.style.borderColor = '#e5e7eb';
+                button.disabled = true;
+            }, 2000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.send-btn').forEach(btn => {
+                btn.disabled = true;
+            });
+
+            document.getElementById('imageModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeImageModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

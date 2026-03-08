@@ -1,0 +1,342 @@
+{% comment %}
+  Design Generation Component (Step 2)
+  Displays loading states with progress feedback, 3 generated designs in responsive grid,
+  and design selection interface with mobile-optimized viewing.
+  Requirements: 5.6, 5.7, 8.3, 8.4
+{% endcomment %}
+
+<div class="design-generation" id="design-generation">
+  <!-- Loading State -->
+  <div class="design-generation__loading" id="design-loading">
+    <div class="design-generation__spinner">
+      <svg class="design-generation__spinner-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+      </svg>
+    </div>
+    <h3 class="design-generation__loading-title">Generating Your Designs...</h3>
+    <p class="design-generation__loading-text" id="loading-message">Our AI is creating unique designs based on your input</p>
+    <div class="design-generation__progress-bar">
+      <div class="design-generation__progress-fill" id="progress-fill"></div>
+    </div>
+    <p class="design-generation__loading-hint">This usually takes 30-60 seconds</p>
+  </div>
+
+  <!-- Designs Grid -->
+  <div class="design-generation__grid" id="designs-grid" hidden>
+    <h2 class="design-generation__title">Choose Your Design</h2>
+    <p class="design-generation__subtitle">Select one of these AI-generated designs to continue</p>
+    
+    <div class="design-generation__cards">
+      <!-- Design Card 1 -->
+      <div class="design-card" data-design-index="0" role="button" tabindex="0" aria-label="Select design 1">
+        <div class="design-card__image-wrap">
+          <img class="design-card__image" id="design-img-0" src="" alt="Generated design 1" loading="lazy" width="400" height="400" decoding="async">
+          <div class="design-card__overlay">
+            <svg class="design-card__check-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+        </div>
+        <div class="design-card__label">Design 1</div>
+      </div>
+
+      <!-- Design Card 2 -->
+      <div class="design-card" data-design-index="1" role="button" tabindex="0" aria-label="Select design 2">
+        <div class="design-card__image-wrap">
+          <img class="design-card__image" id="design-img-1" src="" alt="Generated design 2" loading="lazy" width="400" height="400" decoding="async">
+          <div class="design-card__overlay">
+            <svg class="design-card__check-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+        </div>
+        <div class="design-card__label">Design 2</div>
+      </div>
+
+      <!-- Design Card 3 -->
+      <div class="design-card" data-design-index="2" role="button" tabindex="0" aria-label="Select design 3">
+        <div class="design-card__image-wrap">
+          <img class="design-card__image" id="design-img-2" src="" alt="Generated design 3" loading="lazy" width="400" height="400" decoding="async">
+          <div class="design-card__overlay">
+            <svg class="design-card__check-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+        </div>
+        <div class="design-card__label">Design 3</div>
+      </div>
+    </div>
+
+    <!-- Regenerate Button -->
+    <div class="design-generation__actions">
+      <button type="button" class="btn btn-secondary" id="regenerate-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+        </svg>
+        Regenerate Designs
+      </button>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div class="design-generation__error" id="design-error" hidden>
+    <div class="design-generation__error-icon">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+    </div>
+    <h3 class="design-generation__error-title" id="error-title">Generation Failed</h3>
+    <p class="design-generation__error-text" id="error-message">Something went wrong. Please try again.</p>
+    <button type="button" class="btn btn-primary" id="retry-btn">Try Again</button>
+  </div>
+</div>
+
+<style>
+  .design-generation {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 0;
+  }
+
+  /* Loading State */
+  .design-generation__loading {
+    text-align: center;
+    padding: 4rem 2rem;
+  }
+
+  .design-generation__spinner {
+    display: inline-block;
+    margin-bottom: 1.5rem;
+  }
+
+  .design-generation__spinner-icon {
+    color: rgb(var(--color-base-accent-1, 99, 102, 241));
+    animation: spin 2s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .design-generation__loading-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: rgb(var(--color-base-text, 31, 41, 55));
+    margin-bottom: 0.5rem;
+  }
+
+  .design-generation__loading-text {
+    font-size: 1rem;
+    color: rgb(var(--color-base-text, 31, 41, 55), 0.7);
+    margin-bottom: 2rem;
+  }
+
+  .design-generation__progress-bar {
+    max-width: 400px;
+    height: 8px;
+    background: rgb(var(--color-base-text, 31, 41, 55), 0.1);
+    border-radius: 4px;
+    margin: 0 auto 1rem;
+    overflow: hidden;
+  }
+
+  .design-generation__progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, 
+      rgb(var(--color-base-accent-1, 99, 102, 241)),
+      rgb(var(--color-base-accent-2, 139, 92, 246))
+    );
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+
+  .design-generation__loading-hint {
+    font-size: 0.875rem;
+    color: rgb(var(--color-base-text, 31, 41, 55), 0.5);
+  }
+
+  /* Designs Grid */
+  .design-generation__grid {
+    padding: 2rem 1rem;
+  }
+
+  .design-generation__title {
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+    color: rgb(var(--color-base-text, 31, 41, 55));
+    margin-bottom: 0.5rem;
+  }
+
+  .design-generation__subtitle {
+    font-size: 1rem;
+    text-align: center;
+    color: rgb(var(--color-base-text, 31, 41, 55), 0.7);
+    margin-bottom: 2rem;
+  }
+
+  .design-generation__cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  @media screen and (min-width: 750px) {
+    .design-generation__cards {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+    }
+  }
+
+  /* Design Card */
+  .design-card {
+    position: relative;
+    cursor: pointer;
+    border-radius: var(--buttons-radius, 8px);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    background: rgb(var(--color-base-background-1, 255, 255, 255));
+    border: 3px solid transparent;
+  }
+
+  .design-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  }
+
+  .design-card:focus-visible {
+    outline: 3px solid rgb(var(--color-base-accent-1, 99, 102, 241));
+    outline-offset: 2px;
+  }
+
+  .design-card.design-card--selected {
+    border-color: rgb(var(--color-base-accent-1, 99, 102, 241));
+    box-shadow: 0 10px 25px -5px rgb(var(--color-base-accent-1, 99, 102, 241), 0.3);
+  }
+
+  .design-card__image-wrap {
+    position: relative;
+    aspect-ratio: 1;
+    background: rgb(var(--color-base-background-2, 249, 250, 251));
+    overflow: hidden;
+  }
+
+  .design-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .design-card__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(99, 102, 241, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .design-card--selected .design-card__overlay {
+    opacity: 1;
+  }
+
+  .design-card__check-icon {
+    color: white;
+  }
+
+  .design-card__label {
+    padding: 0.75rem;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: rgb(var(--color-base-text, 31, 41, 55));
+  }
+
+  /* Actions */
+  .design-generation__actions {
+    text-align: center;
+  }
+
+  /* Error State */
+  .design-generation__error {
+    text-align: center;
+    padding: 4rem 2rem;
+  }
+
+  .design-generation__error-icon {
+    color: #ef4444;
+    margin-bottom: 1rem;
+  }
+
+  .design-generation__error-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: rgb(var(--color-base-text, 31, 41, 55));
+    margin-bottom: 0.5rem;
+  }
+
+  .design-generation__error-text {
+    font-size: 1rem;
+    color: rgb(var(--color-base-text, 31, 41, 55), 0.7);
+    margin-bottom: 1rem;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .design-generation__error-suggestions {
+    text-align: left;
+    max-width: 400px;
+    margin: 0 auto 1.5rem;
+    padding: 0 0 0 1.25rem;
+    font-size: 0.9375rem;
+    color: rgb(var(--color-base-text, 31, 41, 55), 0.6);
+    line-height: 1.7;
+    list-style: disc;
+  }
+
+  .design-generation__modify-btn {
+    margin-top: 0.75rem;
+    margin-left: 0.5rem;
+  }
+
+  /* Mobile Optimizations */
+  @media screen and (max-width: 749px) {
+    .design-generation__loading {
+      padding: 3rem 1rem;
+    }
+
+    .design-generation__title {
+      font-size: 1.5rem;
+    }
+
+    .design-generation__cards {
+      gap: 1rem;
+    }
+
+    .design-card__label {
+      font-size: 0.875rem;
+      padding: 0.625rem;
+    }
+  }
+
+  /* Touch device optimizations */
+  @media (pointer: coarse) {
+    .design-card {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+</style>

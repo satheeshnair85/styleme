@@ -1,0 +1,97 @@
+{% comment %}
+  Customer Login Template
+  Provides login form for customer account access
+{% endcomment %}
+
+{{ 'order-tracking.css' | asset_url | stylesheet_tag }}
+
+<div class="customer-login">
+  <div class="customer-login__container">
+    <div class="customer-login__card">
+      <h1 class="customer-login__title">Sign In</h1>
+      <p class="customer-login__subtitle">Access your account to track orders and manage your designs.</p>
+
+      {% form 'customer_login' %}
+        {% if form.errors %}
+          <div class="customer-login__error" role="alert">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+            <span>{{ form.errors | default_errors }}</span>
+          </div>
+        {% endif %}
+
+        <div class="customer-login__field">
+          <label for="CustomerEmail">Email</label>
+          <input type="email" id="CustomerEmail" name="customer[email]" autocomplete="email" autocapitalize="off" required placeholder="your@email.com">
+        </div>
+
+        <div class="customer-login__field">
+          <label for="CustomerPassword">Password</label>
+          <input type="password" id="CustomerPassword" name="customer[password]" autocomplete="current-password" required placeholder="••••••••">
+        </div>
+
+        <button type="submit" class="btn btn-primary customer-login__submit">Sign In</button>
+
+        <div class="customer-login__links">
+          <a href="#recover">Forgot your password?</a>
+          {% if shop.customer_accounts_optional %}
+            <a href="{{ routes.account_register_url }}">Create account</a>
+          {% endif %}
+        </div>
+      {% endform %}
+    </div>
+
+    <!-- Password Recovery (hidden by default) -->
+    <div class="customer-login__card customer-login__recover" id="recover" style="display:none;">
+      <h2 class="customer-login__title">Reset Password</h2>
+      <p class="customer-login__subtitle">We'll send you an email to reset your password.</p>
+
+      {% form 'recover_customer_password' %}
+        {% if form.posted_successfully? %}
+          <div class="customer-login__success" role="status">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span>We've sent you an email with a link to update your password.</span>
+          </div>
+        {% endif %}
+
+        <div class="customer-login__field">
+          <label for="RecoverEmail">Email</label>
+          <input type="email" id="RecoverEmail" name="email" autocomplete="email" autocapitalize="off" required placeholder="your@email.com">
+        </div>
+
+        <button type="submit" class="btn btn-primary customer-login__submit">Send Reset Link</button>
+
+        <div class="customer-login__links">
+          <a href="#login" id="back-to-login">Back to login</a>
+        </div>
+      {% endform %}
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    var loginForm = document.querySelector('.customer-login__card:not(.customer-login__recover)');
+    var recoverForm = document.getElementById('recover');
+    
+    function showRecover() {
+      loginForm.style.display = 'none';
+      recoverForm.style.display = 'block';
+    }
+    
+    function showLogin() {
+      recoverForm.style.display = 'none';
+      loginForm.style.display = 'block';
+    }
+
+    document.querySelectorAll('a[href="#recover"]').forEach(function(link) {
+      link.addEventListener('click', function(e) { e.preventDefault(); showRecover(); });
+    });
+
+    var backLink = document.getElementById('back-to-login');
+    if (backLink) {
+      backLink.addEventListener('click', function(e) { e.preventDefault(); showLogin(); });
+    }
+
+    if (window.location.hash === '#recover') showRecover();
+  })();
+</script>

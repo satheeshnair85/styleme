@@ -1,0 +1,441 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AI Custom Merchandise Platform - Complete Infrastructure Stack'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+    Description: Environment name
+  
+  ApiKeyValue:
+    Type: String
+    NoEcho: true
+    Description: API Key for authentication
+    Default: sk-ai-merchandise-2024-secure-key-xyz789
+  
+  ShopifyDomain:
+    Type: String
+    Default: stylemytravel-dev.myshopify.com
+    Description: Shopify store domain for CORS
+
+Resources:
+  # S3 Buckets for Image Storage
+  AnonymousImageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'ai-merchandise-anonymous-${Environment}-${AWS::AccountId}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldImages
+            Status: Enabled
+            ExpirationInDays: 30  # Delete anonymous images after 30 days
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, HEAD]
+            AllowedOrigins: 
+              - !Sub 'https://${ShopifyDomain}'
+              - 'https://cdn.shopify.com'
+            MaxAge: 3600
+
+  UserImageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'ai-merchandise-users-${Environment}-${AWS::AccountId}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: ArchiveOldImages
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 90
+                StorageClass: STANDARD_IA
+              - TransitionInDays: 365
+                StorageClass: GLACIER
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, HEAD]
+            AllowedOrigins: 
+              - !Sub 'https://${ShopifyDomain}'
+              - 'https://cdn.shopify.com'
+            MaxAge: 3600
+
+  CompositeBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'ai-merchandise-composites-${Environment}-${AWS::AccountId}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldComposites
+            Status: Enabled
+            ExpirationInDays: 14  # Delete composites after 14 days
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, HEAD]
+            AllowedOrigins: 
+              - !Sub 'https://${ShopifyDomain}'
+              - 'https://cdn.shopify.com'
+            MaxAge: 3600
+
+  # IAM Role for Lambda Function
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'ai-merchandise-lambda-role-${Environment}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: BedrockAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
+                Resource: '*'
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:GeneratePresignedUrl
+                Resource:
+                  - !Sub 'arn:aws:s3:::ai-merchandise-anonymous-${Environment}-${AWS::AccountId}/*'
+                  - !Sub 'arn:aws:s3:::ai-merchandise-users-${Environment}-${AWS::AccountId}/*'
+                  - !Sub 'arn:aws:s3:::ai-merchandise-composites-${Environment}-${AWS::AccountId}/*'
+
+  # Lambda Function for Design Generation
+  DesignGeneratorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'ai-merchandise-design-generator-${Environment}'
+      Runtime: python3.11
+      Handler: generate_design.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 300
+      MemorySize: 1024
+      Environment:
+        Variables:
+          STAGE: !Ref Environment
+          S3_BUCKET_ANONYMOUS: !Ref AnonymousImageBucket
+          S3_BUCKET_USER: !Ref UserImageBucket
+          API_KEY: !Ref ApiKeyValue
+      Code:
+        ZipFile: |
+          import json
+          def handler(event, context):
+              return {
+                  'statusCode': 200,
+                  'body': json.dumps({'message': 'Placeholder - will be updated with actual code'})
+              }
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: ai-merchandise
+
+  # Lambda Function for Design Compositor
+  DesignCompositorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'ai-merchandise-compositor-${Environment}'
+      Runtime: python3.11
+      Handler: composite_design.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 60
+      MemorySize: 512
+      Environment:
+        Variables:
+          STAGE: !Ref Environment
+          COMPOSITE_BUCKET_NAME: !Ref CompositeBucket
+          API_KEY: !Ref ApiKeyValue
+      Code:
+        ZipFile: |
+          import json
+          def lambda_handler(event, context):
+              return {
+                  'statusCode': 200,
+                  'body': json.dumps({'message': 'Placeholder - will be updated with actual code'})
+              }
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: ai-merchandise
+
+  # API Gateway REST API
+  ApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub 'ai-merchandise-api-${Environment}'
+      Description: 'AI Custom Merchandise API Gateway'
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      Policy:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action: execute-api:Invoke
+            Resource: '*'
+
+  # API Gateway Resources
+  GenerateDesignResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: generate-design
+
+  CompositeDesignResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: composite-design
+
+  # API Gateway Method (POST)
+  GenerateDesignMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref GenerateDesignResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DesignGeneratorFunction.Arn}/invocations'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+
+  # API Gateway Method (OPTIONS for CORS)
+  GenerateDesignOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref GenerateDesignResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Api-Key'"
+              method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+            ResponseTemplates:
+              application/json: ''
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+
+  # Compositor API Gateway Method (POST)
+  CompositeDesignMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref CompositeDesignResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DesignCompositorFunction.Arn}/invocations'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+
+  # Compositor API Gateway Method (OPTIONS for CORS)
+  CompositeDesignOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref CompositeDesignResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Api-Key'"
+              method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+            ResponseTemplates:
+              application/json: ''
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+
+  # Lambda Permissions for API Gateway
+  LambdaApiGatewayPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref DesignGeneratorFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*'
+
+  CompositorApiGatewayPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref DesignCompositorFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*'
+
+  # API Gateway Deployment
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - GenerateDesignMethod
+      - GenerateDesignOptionsMethod
+      - CompositeDesignMethod
+      - CompositeDesignOptionsMethod
+    Properties:
+      RestApiId: !Ref ApiGateway
+      StageName: !Ref Environment
+
+  # CloudWatch Log Groups for Lambda
+  LambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/ai-merchandise-design-generator-${Environment}'
+      RetentionInDays: 14
+
+  CompositorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/ai-merchandise-compositor-${Environment}'
+      RetentionInDays: 14
+
+  # CloudWatch Alarms
+  LambdaErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'ai-merchandise-lambda-errors-${Environment}'
+      AlarmDescription: 'Lambda function errors'
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 5
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref DesignGeneratorFunction
+
+  LambdaDurationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'ai-merchandise-lambda-duration-${Environment}'
+      AlarmDescription: 'Lambda function duration'
+      MetricName: Duration
+      Namespace: AWS/Lambda
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 240000  # 4 minutes
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref DesignGeneratorFunction
+
+Outputs:
+  ApiGatewayUrl:
+    Description: 'API Gateway endpoint URL for design generation'
+    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/generate-design'
+    Export:
+      Name: !Sub '${AWS::StackName}-ApiUrl'
+
+  CompositorApiUrl:
+    Description: 'API Gateway endpoint URL for design compositor'
+    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/composite-design'
+    Export:
+      Name: !Sub '${AWS::StackName}-CompositorUrl'
+
+  AnonymousBucketName:
+    Description: 'S3 bucket for anonymous user images'
+    Value: !Ref AnonymousImageBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-AnonymousBucket'
+
+  UserBucketName:
+    Description: 'S3 bucket for logged-in user images'
+    Value: !Ref UserImageBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-UserBucket'
+
+  CompositeBucketName:
+    Description: 'S3 bucket for composite images'
+    Value: !Ref CompositeBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-CompositeBucket'
+
+  LambdaFunctionName:
+    Description: 'Lambda function name'
+    Value: !Ref DesignGeneratorFunction
+    Export:
+      Name: !Sub '${AWS::StackName}-LambdaFunction'
+
+  CompositorFunctionName:
+    Description: 'Compositor Lambda function name'
+    Value: !Ref DesignCompositorFunction
+    Export:
+      Name: !Sub '${AWS::StackName}-CompositorFunction'
+
+  LambdaFunctionArn:
+    Description: 'Lambda function ARN'
+    Value: !GetAtt DesignGeneratorFunction.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-LambdaArn'

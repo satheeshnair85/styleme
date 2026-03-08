@@ -1,0 +1,30 @@
+# Shopify Theme Ignore File
+
+# Version Control
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Kiro
+.kiro/
+
+# Node
+node_modules/
+package.json
+package-lock.json
+
+# Documentation
+README.md
+*.md
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Build files
+*.log

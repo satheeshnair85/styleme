@@ -1,0 +1,151 @@
+{% comment %}
+  Meta tags snippet for AI Custom Merchandise Platform
+  Handles SEO, social media, and structured data
+{% endcomment %}
+
+{%- assign og_title = page_title | default: shop.name -%}
+{%- assign og_url = canonical_url | default: shop.url -%}
+{%- assign og_type = 'website' -%}
+{%- assign og_description = page_description | default: shop.description | default: shop.name -%}
+
+{%- if template contains 'product' -%}
+  {%- assign og_type = 'product' -%}
+  {%- if product.featured_media -%}
+    {%- assign og_image = product.featured_media | image_url: width: 1200, height: 630 -%}
+    {%- assign og_image_alt = product.featured_media.alt | default: product.title -%}
+  {%- endif -%}
+{%- elsif template contains 'article' -%}
+  {%- assign og_type = 'article' -%}
+  {%- if article.image -%}
+    {%- assign og_image = article.image | image_url: width: 1200, height: 630 -%}
+    {%- assign og_image_alt = article.image.alt | default: article.title -%}
+  {%- endif -%}
+{%- elsif template contains 'collection' -%}
+  {%- if collection.image -%}
+    {%- assign og_image = collection.image | image_url: width: 1200, height: 630 -%}
+    {%- assign og_image_alt = collection.image.alt | default: collection.title -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- unless og_image -%}
+  {%- if settings.share_image -%}
+    {%- assign og_image = settings.share_image | image_url: width: 1200, height: 630 -%}
+    {%- assign og_image_alt = settings.share_image.alt | default: shop.name -%}
+  {%- endif -%}
+{%- endunless -%}
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="{{ og_type }}">
+<meta property="og:title" content="{{ og_title | escape }}">
+<meta property="og:url" content="{{ og_url }}">
+<meta property="og:description" content="{{ og_description | escape }}">
+<meta property="og:site_name" content="{{ shop.name | escape }}">
+
+{%- if og_image -%}
+  <meta property="og:image" content="https:{{ og_image }}">
+  <meta property="og:image:alt" content="{{ og_image_alt | escape }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+{%- endif -%}
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ og_title | escape }}">
+<meta name="twitter:description" content="{{ og_description | escape }}">
+{%- if og_image -%}
+  <meta name="twitter:image" content="https:{{ og_image }}">
+  <meta name="twitter:image:alt" content="{{ og_image_alt | escape }}">
+{%- endif -%}
+
+{%- if settings.social_twitter_link != blank -%}
+  <meta name="twitter:site" content="{{ settings.social_twitter_link | split: 'twitter.com/' | last | prepend: '@' }}">
+{%- endif -%}
+
+<!-- Additional SEO Meta Tags -->
+<meta name="robots" content="index, follow">
+<meta name="googlebot" content="index, follow">
+
+{%- if template contains 'product' -%}
+  <!-- Product-specific meta tags -->
+  <meta property="product:brand" content="{{ product.vendor | escape }}">
+  <meta property="product:availability" content="{% if product.available %}in stock{% else %}out of stock{% endif %}">
+  <meta property="product:condition" content="new">
+  <meta property="product:price:amount" content="{{ product.price | money_without_currency | remove: ',' }}">
+  <meta property="product:price:currency" content="{{ cart.currency.iso_code }}">
+  
+  <!-- Structured Data for Products -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": {{ product.title | json }},
+    "description": {{ product.description | strip_html | json }},
+    "image": [
+      {%- for media in product.media limit: 5 -%}
+        {%- if media.media_type == 'image' -%}
+          "https:{{ media | image_url: width: 1200 }}"
+          {%- unless forloop.last -%},{%- endunless -%}
+        {%- endif -%}
+      {%- endfor -%}
+    ],
+    "brand": {
+      "@type": "Brand",
+      "name": {{ product.vendor | json }}
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": {{ shop.url | append: product.url | json }},
+      "priceCurrency": {{ cart.currency.iso_code | json }},
+      "price": {{ product.price | divided_by: 100.0 | json }},
+      "availability": "https://schema.org/{% if product.available %}InStock{% else %}OutOfStock{% endif %}",
+      "seller": {
+        "@type": "Organization",
+        "name": {{ shop.name | json }}
+      }
+    }
+  }
+  </script>
+{%- endif -%}
+
+{%- if template == 'index' -%}
+  <!-- Homepage structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": {{ shop.name | json }},
+    "url": {{ shop.url | json }},
+    "description": {{ shop.description | json }},
+    "sameAs": [
+      {%- if settings.social_facebook_link != blank -%}{{ settings.social_facebook_link | json }}{%- endif -%}
+      {%- if settings.social_instagram_link != blank -%}{%- if settings.social_facebook_link != blank -%},{%- endif -%}{{ settings.social_instagram_link | json }}{%- endif -%}
+      {%- if settings.social_twitter_link != blank -%}{%- if settings.social_facebook_link != blank or settings.social_instagram_link != blank -%},{%- endif -%}{{ settings.social_twitter_link | json }}{%- endif -%}
+    ]
+  }
+  </script>
+{%- endif -%}
+
+<!-- AI Custom Merchandise specific meta tags -->
+<meta name="application-name" content="AI Custom Merchandise">
+<meta name="description" content="Create custom merchandise with AI-powered designs based on your mood. T-shirts, mugs, caps, and stickers with unique AI-generated artwork.">
+<meta name="keywords" content="AI design, custom merchandise, personalized products, mood-based design, AI art, custom t-shirts, custom mugs, print on demand">
+
+<!-- Mobile and PWA optimization -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="{{ shop.name }}">
+<meta name="theme-color" content="#6366f1">
+<meta name="msapplication-navbutton-color" content="#6366f1">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<!-- Preconnect to external domains for performance -->
+<link rel="preconnect" href="https://cdn.shopify.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<!-- DNS prefetch for better performance -->
+<link rel="dns-prefetch" href="//productreviews.shopifycdn.com">
+<link rel="dns-prefetch" href="//ajax.googleapis.com">
+<link rel="dns-prefetch" href="//maps.googleapis.com">
+<link rel="dns-prefetch" href="//maps.gstatic.com">

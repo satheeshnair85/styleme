@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Collection Cards Design - Chat Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 2rem 1rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            text-align: center;
+            color: #333;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+        }
+
+        .collections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 2rem;
+        }
+
+        /* Purple gradient border card */
+        .collection-card {
+            background: white;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        /* Purple gradient border outline */
+        .collection-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #8B5CF6, #A855F7, #C084FC, #DDD6FE);
+            border-radius: 20px;
+            padding: 3px;
+            z-index: -1;
+        }
+
+        .collection-card::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            right: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 17px;
+            z-index: -1;
+        }
+
+        .collection-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(139, 92, 246, 0.2);
+        }
+
+        /* Product image area */
+        .product-image-area {
+            height: 200px;
+            background: #f8f9fa;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            font-weight: 500;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        /* Input section */
+        .input-section {
+            padding: 1.5rem;
+        }
+
+        .input-container {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .prompt-input {
+            width: 100%;
+            padding: 1rem 4.5rem 1rem 1.5rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            resize: none;
+            min-height: 56px;
+            transition: all 0.3s ease;
+            background: #fafbfc;
+            outline: none;
+        }
+
+        .prompt-input:focus {
+            border-color: #8B5CF6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+            background: white;
+        }
+
+        .prompt-input::placeholder {
+            color: #9ca3af;
+            font-weight: 400;
+        }
+
+        /* Chat interface icons - simplified */
+        .input-actions {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .image-btn {
+            background: #06b6d4;
+            color: white;
+        }
+
+        .image-btn:hover {
+            background: #0891b2;
+        }
+
+        .send-btn {
+            background: #8B5CF6;
+            color: white;
+        }
+
+        .send-btn:hover {
+            background: #7C3AED;
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            background: #d1d5db;
+            color: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Image source selection modal */
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 300px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #374151;
+        }
+
+        .image-options {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .image-option {
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .image-option:hover {
+            border-color: #8B5CF6;
+            background: #f8faff;
+        }
+
+        .option-icon {
+            font-size: 1.5rem;
+        }
+
+        .option-text {
+            text-align: left;
+        }
+
+        .option-title {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .option-desc {
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+
+        .modal-close {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .char-counter {
+            text-align: right;
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+
+        /* File input hidden */
+        .file-input {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .collections-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .page-title {
+                font-size: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="page-title">AI Design Chat Interface</h1>
+        
+        <div class="collections-grid">
+            <!-- T-Shirts Collection -->
+            <div class="collection-card" data-collection="tshirts">
+                <div class="product-image-area">
+                    A HIGH QUALITY T-SHIRT IMAGE FILLS<br>
+                    THIS SPACE COMPLETELY
+                </div>
+                
+                <div class="input-section">
+                    <div class="input-container">
+                        <textarea 
+                            class="prompt-input" 
+                            placeholder="Ask anything"
+                            maxlength="500"></textarea>
+                        <div class="input-actions">
+                            <button class="action-btn image-btn" onclick="showImageOptions(this)" title="Add image from gallery or camera">
+                                🖼️
+                            </button>
+                            <button class="action-btn send-btn" onclick="generateDesign(this)" title="Send message to generate design">
+                                ➤
+                            </button>
+                        </div>
+                        <input type="file" class="file-input" accept="image/*" onchange="handleImageUpload(this)">
+                        <input type="file" class="camera-input" accept="image/*" capture="camera" onchange="handleImageUpload(this)">
+                    </div>
+                    <div class="char-counter">0/500</div>
+                </div>
+            </div>
+
+            <!-- Hoodies Collection -->
+            <div class="collection-card" data-collection="hoodies">
+                <div class="product-image-area">
+                    A HIGH QUALITY HOODIE IMAGE FILLS<br>
+                    THIS SPACE COMPLETELY
+                </div>
+                
+                <div class="input-section">
+                    <div class="input-container">
+                        <textarea 
+                            class="prompt-input" 
+                            placeholder="Ask anything"
+                            maxlength="500"></textarea>
+                        <div class="input-actions">
+                            <button class="action-btn image-btn" onclick="showImageOptions(this)" title="Add image from gallery or camera">
+                                🖼️
+                            </button>
+                            <button class="action-btn send-btn" onclick="generateDesign(this)" title="Send message to generate design">
+                                ➤
+                            </button>
+                        </div>
+                        <input type="file" class="file-input" accept="image/*" onchange="handleImageUpload(this)">
+                        <input type="file" class="camera-input" accept="image/*" capture="camera" onchange="handleImageUpload(this)">
+                    </div>
+                    <div class="char-counter">0/500</div>
+                </div>
+            </div>
+
+            <!-- Accessories Collection -->
+            <div class="collection-card" data-collection="accessories">
+                <div class="product-image-area">
+                    A HIGH QUALITY ACCESSORY IMAGE FILLS<br>
+                    THIS SPACE COMPLETELY
+                </div>
+                
+                <div class="input-section">
+                    <div class="input-container">
+                        <textarea 
+                            class="prompt-input" 
+                            placeholder="Ask anything"
+                            maxlength="500"></textarea>
+                        <div class="input-actions">
+                            <button class="action-btn image-btn" onclick="showImageOptions(this)" title="Add image from gallery or camera">
+                                🖼️
+                            </button>
+                            <button class="action-btn send-btn" onclick="generateDesign(this)" title="Send message to generate design">
+                                ➤
+                            </button>
+                        </div>
+                        <input type="file" class="file-input" accept="image/*" onchange="handleImageUpload(this)">
+                        <input type="file" class="camera-input" accept="image/*" capture="camera" onchange="handleImageUpload(this)">
+                    </div>
+                    <div class="char-counter">0/500</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Source Selection Modal -->
+        <div class="image-modal" id="imageModal">
+            <div class="modal-content">
+                <h3 class="modal-title">Choose Image Source</h3>
+                <div class="image-options">
+                    <div class="image-option" onclick="selectGallery()">
+                        <div class="option-icon">📱</div>
+                        <div class="option-text">
+                            <div class="option-title">Gallery</div>
+                            <div class="option-desc">Choose from your photos</div>
+                        </div>
+                    </div>
+                    <div class="image-option" onclick="selectCamera()">
+                        <div class="option-icon">📷</div>
+                        <div class="option-text">
+                            <div class="option-title">Camera</div>
+                            <div class="option-desc">Take a new photo</div>
+                        </div>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeImageModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentCard = null; // Track which card is being used
+
+        // Character counter functionality
+        document.querySelectorAll('.prompt-input').forEach(textarea => {
+            textarea.addEventListener('input', function() {
+                const counter = this.parentElement.parentElement.querySelector('.char-counter');
+                const count = this.value.length;
+                counter.textContent = `${count}/500`;
+                
+                // Enable/disable send button based on content
+                const sendBtn = this.parentElement.querySelector('.send-btn');
+                sendBtn.disabled = count === 0;
+                
+                if (count > 450) {
+                    counter.style.color = '#ef4444';
+                } else if (count > 400) {
+                    counter.style.color = '#f59e0b';
+                } else {
+                    counter.style.color = '#6b7280';
+                }
+            });
+        });
+
+        // Show image source options modal
+        function showImageOptions(button) {
+            currentCard = button.closest('.collection-card');
+            const modal = document.getElementById('imageModal');
+            modal.classList.add('show');
+        }
+
+        // Close image modal
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.classList.remove('show');
+            currentCard = null;
+        }
+
+        // Select gallery option
+        function selectGallery() {
+            if (currentCard) {
+                const fileInput = currentCard.querySelector('.file-input');
+                fileInput.click();
+            }
+            closeImageModal();
+        }
+
+        // Select camera option
+        function selectCamera() {
+            if (currentCard) {
+                const cameraInput = currentCard.querySelector('.camera-input');
+                cameraInput.click();
+            }
+            closeImageModal();
+        }
+
+        // Handle image upload (works for both gallery and camera)
+        function handleImageUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const card = input.closest('.collection-card');
+            const textarea = card.querySelector('.prompt-input');
+            const sendBtn = card.querySelector('.send-btn');
+            
+            // Show file name in textarea
+            const source = input.hasAttribute('capture') ? 'Camera' : 'Gallery';
+            textarea.value = `${source} image: ${file.name}`;
+            textarea.style.background = '#f0fdf4';
+            textarea.style.borderColor = '#10b981';
+            
+            // Enable send button
+            sendBtn.disabled = false;
+            
+            // Update character counter
+            const counter = card.querySelector('.char-counter');
+            counter.textContent = `${source}: ${file.name}`;
+            counter.style.color = '#10b981';
+        }
+
+        // Generate design (send message)
+        function generateDesign(button) {
+            const card = button.closest('.collection-card');
+            const textarea = card.querySelector('.prompt-input');
+            const prompt = textarea.value.trim();
+            const collection = card.getAttribute('data-collection');
+            
+            if (!prompt) {
+                alert('Please enter a message or upload an image');
+                return;
+            }
+            
+            // Show loading state
+            button.innerHTML = '⏳';
+            button.disabled = true;
+            textarea.disabled = true;
+            
+            // Simulate API call
+            setTimeout(() => {
+                button.innerHTML = '➤';
+                button.disabled = false;
+                textarea.disabled = false;
+                alert(`Design generated for ${collection}! (This is a demo)\n\nPrompt: "${prompt}"`);
+                
+                // Clear the input
+                textarea.value = '';
+                textarea.style.background = '#fafbfc';
+                textarea.style.borderColor = '#e5e7eb';
+                const counter = card.querySelector('.char-counter');
+                counter.textContent = '0/500';
+                counter.style.color = '#6b7280';
+                button.disabled = true;
+            }, 2000);
+        }
+
+        // Initialize send buttons as disabled
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.send-btn').forEach(btn => {
+                btn.disabled = true;
+            });
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeImageModal();
+            }
+        });
+    </script>
+</body>
+</html>

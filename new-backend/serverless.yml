@@ -1,0 +1,54 @@
+service: ai-merchandise-backend
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ${env:AWS_REGION, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  environment:
+    STAGE: ${self:provider.stage}
+    AWS_REGION: ${self:provider.region}
+    S3_BUCKET: ${env:S3_BUCKET_NAME}
+    SHOPIFY_WEBHOOK_SECRET: ${env:SHOPIFY_WEBHOOK_SECRET}
+    SHIPROCKET_API_KEY: ${env:SHIPROCKET_API_KEY}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - bedrock:InvokeModel
+        - bedrock:InvokeModelWithResponseStream
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+        - s3:DeleteObject
+      Resource: "arn:aws:s3:::${env:S3_BUCKET_NAME}/*"
+
+functions:
+  designGenerator:
+    handler: src/functions/design-generator.handler
+    timeout: 300
+    events:
+      - http:
+          path: /generate-design
+          method: post
+          cors: true
+
+  orderProcessor:
+    handler: src/functions/order-processor.handler
+    timeout: 60
+    events:
+      - http:
+          path: /webhook/shopify
+          method: post
+
+  fulfillmentManager:
+    handler: src/functions/fulfillment-manager.handler
+    timeout: 60
+    events:
+      - http:
+          path: /fulfillment/status
+          method: post
+
+plugins:
+  - serverless-offline

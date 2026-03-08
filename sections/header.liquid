@@ -1,0 +1,515 @@
+{% comment %}
+  Fixed Header with SM Logo - Modern e-commerce navigation
+  Features: Fixed position, logo, navigation menu, search, profile, cart
+{% endcomment %}
+
+<header class="site-header" role="banner">
+  <div class="header-container">
+    
+    <!-- Mobile Menu Toggle (Left side) -->
+    <button class="mobile-menu-toggle" aria-label="Menu" aria-expanded="false" onclick="toggleMobileMenu()">
+      <div class="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </button>
+
+    <!-- Logo -->
+    <div class="header-logo">
+      <a href="/" aria-label="StyleMyTravel Home">
+        <img src="{{ 'logo-sm.svg' | asset_url }}" 
+             alt="StyleMyTravel Logo" 
+             class="logo-image"
+             width="120" 
+             height="60">
+      </a>
+    </div>
+
+    <!-- Desktop Navigation - Dynamic Collections -->
+    <nav class="desktop-nav" aria-label="Main navigation">
+      <ul class="nav-list">
+        {% comment %} Loop through all collections and show only those with products {% endcomment %}
+        {% for collection in collections %}
+          {% unless collection.handle == 'all' or collection.products.size == 0 %}
+            <li>
+              <a href="{{ collection.url }}" class="nav-link">
+                {{ collection.title | upcase }}
+              </a>
+            </li>
+          {% endunless %}
+        {% endfor %}
+        
+        {% comment %} Optional: Add HOME link at the end {% endcomment %}
+        <li><a href="/" class="nav-link">HOME</a></li>
+      </ul>
+    </nav>
+
+    <!-- Header Actions -->
+    <div class="header-actions">
+      <!-- Search -->
+      <button class="header-action-btn search-btn" aria-label="Search" onclick="toggleSearch()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+      </button>
+
+      <!-- Profile -->
+      <button class="header-action-btn profile-btn" aria-label="Profile" onclick="window.location.href='{{ routes.account_url }}'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span class="action-text">Profile</span>
+      </button>
+
+      <!-- Cart -->
+      <button class="header-action-btn cart-btn" aria-label="Shopping cart" onclick="window.location.href='{{ routes.cart_url }}'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="9" cy="21" r="1"/>
+          <circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+        </svg>
+        <span class="action-text">Bag</span>
+        {% if cart.item_count > 0 %}
+          <span class="cart-count">{{ cart.item_count }}</span>
+        {% endif %}
+      </button>
+    </div>
+  </div>
+
+  <!-- Search Bar (Hidden by default) -->
+  <div class="search-bar" id="search-bar">
+    <div class="search-container">
+      <form action="{{ routes.search_url }}" method="get" class="search-form">
+        <input type="search" 
+               name="q" 
+               placeholder="Search for products, brands and more" 
+               class="search-input"
+               autocomplete="off">
+        <button type="submit" class="search-submit" aria-label="Submit search">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+        </button>
+      </form>
+      <button class="search-close" onclick="toggleSearch()" aria-label="Close search">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Navigation Menu - Dynamic Collections -->
+  <nav class="mobile-nav" aria-label="Mobile navigation" id="mobile-nav">
+    <div class="mobile-nav-content">
+      <ul class="mobile-nav-list">
+        {% comment %} Loop through all collections and show only those with products {% endcomment %}
+        {% for collection in collections %}
+          {% unless collection.handle == 'all' or collection.products.size == 0 %}
+            <li>
+              <a href="{{ collection.url }}" class="mobile-nav-link" onclick="closeMobileMenu()">
+                {{ collection.title | upcase }}
+              </a>
+            </li>
+          {% endunless %}
+        {% endfor %}
+        
+        {% comment %} Optional: Add HOME link at the end {% endcomment %}
+        <li><a href="/" class="mobile-nav-link" onclick="closeMobileMenu()">HOME</a></li>
+      </ul>
+    </div>
+  </nav>
+</header>
+
+<script>
+  // Mobile menu functionality
+  function toggleMobileMenu() {
+    const mobileNav = document.getElementById('mobile-nav');
+    const menuToggle = document.querySelector('.mobile-menu-toggle');
+    const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true';
+    
+    menuToggle.setAttribute('aria-expanded', !isExpanded);
+    mobileNav.classList.toggle('active');
+    document.body.classList.toggle('mobile-menu-open');
+  }
+
+  function closeMobileMenu() {
+    const mobileNav = document.getElementById('mobile-nav');
+    const menuToggle = document.querySelector('.mobile-menu-toggle');
+    
+    menuToggle.setAttribute('aria-expanded', 'false');
+    mobileNav.classList.remove('active');
+    document.body.classList.remove('mobile-menu-open');
+  }
+
+  // Search functionality
+  function toggleSearch() {
+    const searchBar = document.getElementById('search-bar');
+    const searchInput = searchBar.querySelector('.search-input');
+    
+    searchBar.classList.toggle('active');
+    
+    if (searchBar.classList.contains('active')) {
+      searchInput.focus();
+    }
+  }
+
+  // Close search on escape
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      const searchBar = document.getElementById('search-bar');
+      if (searchBar.classList.contains('active')) {
+        toggleSearch();
+      }
+      closeMobileMenu();
+    }
+  });
+
+  // Close mobile menu when clicking outside
+  document.addEventListener('click', function(event) {
+    const mobileNav = document.getElementById('mobile-nav');
+    const menuToggle = document.querySelector('.mobile-menu-toggle');
+    
+    if (!mobileNav.contains(event.target) && !menuToggle.contains(event.target)) {
+      closeMobileMenu();
+    }
+  });
+
+  // Update cart count dynamically
+  function updateCartCount(count) {
+    const cartCountElements = document.querySelectorAll('.cart-count');
+    cartCountElements.forEach(element => {
+      if (count > 0) {
+        element.textContent = count;
+        element.style.display = 'flex';
+      } else {
+        element.style.display = 'none';
+      }
+    });
+  }
+</script>
+
+<style>
+  /* Header Styles */
+  .site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    height: 60px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* Logo Styles */
+  .header-logo {
+    flex-shrink: 0;
+  }
+
+  .logo-image {
+    height: 40px;
+    width: auto;
+    display: block;
+    transition: transform 0.2s ease;
+  }
+
+  .logo-image:hover {
+    transform: scale(1.05);
+  }
+
+  /* Desktop Navigation */
+  .desktop-nav {
+    display: none;
+    flex: 1;
+    justify-content: center;
+    margin: 0 2rem;
+  }
+
+  .nav-list {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav-link {
+    color: #1f2937;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    position: relative;
+    transition: color 0.2s ease;
+  }
+
+  .nav-link:hover {
+    color: #ff1493;
+  }
+
+  .nav-badge {
+    background: #ff1493;
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 4px;
+    font-weight: 700;
+  }
+
+  /* Header Actions */
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .header-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: none;
+    border: none;
+    color: #1f2937;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+
+  .header-action-btn:hover {
+    background: #f3f4f6;
+    color: #ff1493;
+  }
+
+  .action-text {
+    font-size: 14px;
+    font-weight: 500;
+    display: none;
+  }
+
+  .cart-count {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #ff1493;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Mobile Menu Toggle - Now on left side */
+  .mobile-menu-toggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    order: -1; /* Ensures it appears first on mobile */
+  }
+
+  .hamburger {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .hamburger span {
+    width: 20px;
+    height: 2px;
+    background: #1f2937;
+    transition: all 0.3s ease;
+  }
+
+  .mobile-menu-toggle[aria-expanded="true"] .hamburger span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+  }
+
+  .mobile-menu-toggle[aria-expanded="true"] .hamburger span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .mobile-menu-toggle[aria-expanded="true"] .hamburger span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -6px);
+  }
+
+  /* Search Bar */
+  .search-bar {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    transform: translateY(-100%);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .search-bar.active {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .search-container {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .search-form {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+  }
+
+  .search-input {
+    flex: 1;
+    border: none;
+    background: none;
+    outline: none;
+    font-size: 16px;
+    padding: 0.5rem 0;
+  }
+
+  .search-submit {
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0.25rem;
+  }
+
+  .search-close {
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0.5rem;
+    margin-left: 1rem;
+  }
+
+  /* Mobile Navigation */
+  .mobile-nav {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 999;
+  }
+
+  .mobile-nav.active {
+    transform: translateX(0);
+  }
+
+  .mobile-nav-content {
+    padding: 2rem 1rem;
+  }
+
+  .mobile-nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .mobile-nav-link {
+    display: block;
+    color: #1f2937;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 18px;
+    padding: 1rem 0;
+    border-bottom: 1px solid #f3f4f6;
+    transition: color 0.2s ease;
+  }
+
+  .mobile-nav-link:hover {
+    color: #ff1493;
+  }
+
+  /* Body padding for fixed header */
+  body {
+    padding-top: 60px;
+  }
+
+  body.mobile-menu-open {
+    overflow: hidden;
+  }
+
+  /* Desktop Styles */
+  @media (min-width: 768px) {
+    .desktop-nav {
+      display: flex;
+    }
+
+    .mobile-menu-toggle {
+      display: none;
+    }
+
+    .action-text {
+      display: block;
+    }
+
+    .header-container {
+      padding: 0 2rem;
+      height: 70px;
+    }
+
+    body {
+      padding-top: 70px;
+    }
+
+    .mobile-nav {
+      top: 70px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .header-actions {
+      gap: 1.5rem;
+    }
+
+    .nav-list {
+      gap: 3rem;
+    }
+  }
+</style>

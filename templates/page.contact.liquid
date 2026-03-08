@@ -1,0 +1,171 @@
+{% comment %}
+  Template specifically for contact page with contact form
+{% endcomment %}
+
+<div class="page-container">
+  <div class="page-content">
+    <header class="page-header">
+      <h1 class="page-title">{{ page.title }}</h1>
+    </header>
+    
+    <div class="contact-content">
+      <div class="contact-info">
+        {{ page.content }}
+      </div>
+      
+      <div class="contact-form-section">
+        <h2>Send us a message</h2>
+        
+        {% form 'contact' %}
+          {% if form.posted_successfully? %}
+            <div class="form-success">
+              <p>Thanks for contacting us! We'll get back to you as soon as possible.</p>
+            </div>
+          {% endif %}
+          
+          {% if form.errors %}
+            <div class="form-errors">
+              <p>Please correct the following errors:</p>
+              <ul>
+                {% for field in form.errors %}
+                  <li>{{ field | capitalize }} {{ form.errors.messages[field] }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+          
+          <div class="form-group">
+            <label for="contact-name">Name *</label>
+            <input type="text" id="contact-name" name="contact[name]" value="{{ form.name }}" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="contact-email">Email *</label>
+            <input type="email" id="contact-email" name="contact[email]" value="{{ form.email }}" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="contact-phone">Phone</label>
+            <input type="tel" id="contact-phone" name="contact[phone]" value="{{ form.phone }}">
+          </div>
+          
+          <div class="form-group">
+            <label for="contact-message">Message *</label>
+            <textarea id="contact-message" name="contact[body]" rows="6" required>{{ form.body }}</textarea>
+          </div>
+          
+          <div class="form-group">
+            <button type="submit" class="btn btn-primary">Send Message</button>
+          </div>
+        {% endform %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-xl) var(--spacing-md);
+}
+
+.page-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+}
+
+.page-title {
+  font-size: 2.5rem;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-md);
+}
+
+.contact-content {
+  display: grid;
+  gap: var(--spacing-xl);
+}
+
+.contact-info {
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: var(--color-text);
+}
+
+.contact-form-section h2 {
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-lg);
+  font-size: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: var(--spacing-md);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: var(--spacing-sm);
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  font-family: var(--font-body);
+  transition: border-color var(--transition);
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.form-success {
+  background-color: #d4edda;
+  color: #155724;
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  margin-bottom: var(--spacing-lg);
+  border: 1px solid #c3e6cb;
+}
+
+.form-errors {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  margin-bottom: var(--spacing-lg);
+  border: 1px solid #f5c6cb;
+}
+
+.form-errors ul {
+  margin: var(--spacing-xs) 0 0 0;
+  padding-left: var(--spacing-md);
+}
+
+/* Mobile responsive */
+@media (max-width: 767px) {
+  .page-container {
+    padding: var(--spacing-lg) var(--spacing-sm);
+  }
+  
+  .page-title {
+    font-size: 2rem;
+  }
+  
+  .contact-info {
+    font-size: 1rem;
+  }
+}
+</style>
